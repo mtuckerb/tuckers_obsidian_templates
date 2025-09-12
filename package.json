@@ -1,8 +1,30 @@
 {
-  "name": "obsidian-tuckers-templates",
+  "name": "obsidian-tuckers-tools",
   "version": "1.0.0",
-  "author": "Tucker",
+  "description": "An academic organization plugin for Obsidian",
   "main": "main.js",
+  "scripts": {
+    "dev": "node esbuild.config.mjs",
+    "build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "test:unit": "jest --testPathPattern=\\.test\\.ts$",
+    "lint": "eslint . --ext .ts",
+    "lint:fix": "eslint . --ext .ts --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "version": "node version-bump.mjs && git add manifest.json versions.json"
+  },
+  "keywords": [
+    "obsidian",
+    "plugin",
+    "academic",
+    "education",
+    "student"
+  ],
+  "author": "Tucker",
+  "license": "MIT",
   "devDependencies": {
     "@types/jest": "^29.5.0",
     "@types/node": "^16.11.6",
@@ -16,28 +38,6 @@
     "prettier": "^2.0.0",
     "ts-jest": "^29.1.0",
     "tslib": "2.4.0",
-    "typescript": "^5.9.2"
-  },
-  "description": "An academic organization plugin for Obsidian",
-  "keywords": [
-    "obsidian",
-    "plugin",
-    "academic",
-    "education",
-    "student"
-  ],
-  "license": "MIT",
-  "scripts": {
-    "dev": "node esbuild.config.mjs",
-    "build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
-    "test": "jest",
-    "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage",
-    "test:unit": "jest --testPathPattern=\\.test\\.ts$",
-    "lint": "eslint . --ext .ts",
-    "lint:fix": "eslint . --ext .ts --fix",
-    "format": "prettier --write .",
-    "format:check": "prettier --check .",
-    "version": "node version-bump.mjs && git add manifest.json versions.json"
+    "typescript": "4.7.4"
   }
 }
