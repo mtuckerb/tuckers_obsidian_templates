@@ -1,0 +1,15 @@
+{
+  "version": "1.0.0",
+  "templates": {
+    "Courses/Create Course Homepage.md": "1.0.0",
+    "Courses/Course Index.md": "1.0.0",
+    "Modules/Create Module.md": "1.0.0",
+    "Chapters/Create Chapter.md": "1.0.0",
+    "Assignments/Create Assignment.md": "1.0.0",
+    "Daily/Daily Note.md": "1.0.0",
+    "Utilities/Vocabulary Entry.md": "1.0.0",
+    "Utilities/Due Date Entry.md": "1.0.0"
+  },
+  "plugin_version": "1.0.0",
+  "release_notes": "Initial release of Tuckers Tools templates"
+}
