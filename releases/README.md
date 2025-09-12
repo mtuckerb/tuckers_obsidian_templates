@@ -77,31 +77,6 @@ Templates are installed in your Templater template folder under a "Tuckers Tools
 
 Tuckers Tools maintains full backwards compatibility with existing note structures while providing enhanced features for new content. The plugin uses additive metadata and graceful degradation to ensure all existing functionality continues to work.
 
-## Development
-
-This plugin is built with TypeScript and uses the following tools:
-- esbuild for bundling
-- Jest for testing
-- ESLint and Prettier for code quality
-
-### Scripts
-
-- `npm run dev` - Start development build
-- `npm run build` - Create production build
-- `npm test` - Run tests
-- `npm run lint` - Check code style
-- `npm run format` - Format code
-
-### Directory Structure
-
-The plugin follows a modular architecture with separate files for each feature:
-- Core plugin logic in `main.ts`
-- Settings management in `settings.ts`
-- Template system in `templateManager.ts`
-- Feature modules for courses, vocabulary, due dates, and daily notes
-- Comprehensive test suite
-- Documentation and examples
-
 ## Contributing
 
 Contributions are welcome! Please feel free to submit issues and pull requests.

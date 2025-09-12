@@ -1,11 +1,11 @@
 {
-  "id": "tuckers-templates",
-  "name": "Tuckers Templates",
+  "id": "tuckers-tools",
+  "name": "Tuckers Tools",
   "version": "1.0.0",
   "minAppVersion": "0.15.0",
   "description": "An academic organization plugin for students and educators",
   "author": "Tucker",
-  "authorUrl": "https://github.com/mtuckerb/https://github.com/mtuckerb/tuckers_obsidian_templates
+  "authorUrl": "https://github.com/tucker",
   "isDesktopOnly": false,
   "fundingUrl": ""
 }
