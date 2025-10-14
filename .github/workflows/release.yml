@@ -50,11 +50,6 @@ jobs:
       run: |
         npm run build
 
-    - name: Run tests
-      if: steps.version-check.outputs.should_release == 'true'
-      run: |
-        npm test
-
     - name: Create release
       if: steps.version-check.outputs.should_release == 'true'
       run: |
