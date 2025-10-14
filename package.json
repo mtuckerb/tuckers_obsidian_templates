@@ -1,6 +1,6 @@
 {
   "name": "obsidian-tuckers-tools",
-  "version": "1.0.7",
+  "version": "1.0.12",
   "description": "An academic organization plugin for Obsidian",
   "main": "main.js",
   "scripts": {
