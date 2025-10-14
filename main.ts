@@ -158,21 +158,56 @@ export default class TuckersToolsPlugin extends Plugin {
 
   async newModuleFunction(app: any, tp: any, year: string) {
     // Prompt user for module details
-    const moduleNumber = await tp.system.prompt("Module Number (optional)", "");
-    const weekNumber = await tp.system.prompt("Week Number (optional)", "");
-    const course = await tp.system.suggester(
-      () => app.vault.getMarkdownFiles().filter((f: any) => f.path.includes("Courses")).map((f: any) => f.basename),
-      app.vault.getMarkdownFiles().filter((f: any) => f.path.includes("Courses"))
-    );
-    const courseId = course ? course.split(" - ")[0] || course : "";
-    const discipline = course ? course.split(" - ")[0]?.substring(0, 3) || "GEN" : "GEN";
-    const dayOptions = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
-    const dayOfWeek = await tp.system.suggester(dayOptions, dayOptions, "Day of Week");
+    let moduleNumber: string | null = "";
+    let weekNumber: string | null = "";
+    let course = "";
+    let courseId = "";
+    let discipline = "GEN";
+    let dayOfWeek = "";
+
+    try {
+      // Attempt prompts with fallback
+      if (tp && tp.system && tp.system.prompt) {
+        const tempModuleNumber = await tp.system.prompt("Module Number (optional)", "");
+        moduleNumber = tempModuleNumber ? tempModuleNumber : null;
+        
+        const tempWeekNumber = await tp.system.prompt("Week Number (optional)", "");
+        weekNumber = tempWeekNumber ? tempWeekNumber : null;
+        
+        course = await tp.system.suggester(
+          () => app.vault.getMarkdownFiles().filter((f: any) => f.path.includes("Courses")).map((f: any) => f.basename),
+          app.vault.getMarkdownFiles().filter((f: any) => f.path.includes("Courses"))
+        );
+        
+        dayOfWeek = await tp.system.suggester(
+          ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
+          ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
+          "Day of Week"
+        );
+      } else {
+        // Fallback values
+        moduleNumber = null;
+        weekNumber = null;
+        course = "New Course";
+        dayOfWeek = "Monday";
+      }
+    } catch (e) {
+      console.error("Error in new_module prompts:", e);
+      // Default values on error
+      moduleNumber = null;
+      weekNumber = null;
+      course = "New Course";
+      dayOfWeek = "Monday";
+    }
+
+    // Calculate derived values
+    courseId = course ? course.split(" - ")[0] || course : "";
+    discipline = course ? (course.split(" - ")[0]?.substring(0, 3) || "GEN") : "GEN";
 
     return {
       season: "Fall", // This would normally be dynamically determined
-      moduleNumber: moduleNumber || null,
-      weekNumber: weekNumber || null,
+      moduleNumber: moduleNumber,
+      weekNumber: weekNumber,
       course,
       courseId,
       discipline,
@@ -181,18 +216,41 @@ export default class TuckersToolsPlugin extends Plugin {
   }
 
   async newChapterFunction(tp: any) {
-    const chapterNumber = await tp.system.prompt("Chapter Number", "");
-    const course = await tp.system.suggester(
-      () => tp.app.vault.getMarkdownFiles().filter((f: any) => f.path.includes("Courses")).map((f: any) => f.basename),
-      tp.app.vault.getMarkdownFiles().filter((f: any) => f.path.includes("Courses"))
-    );
-    const courseId = course ? course.split(" - ")[0] || course : "";
-    const discipline = course ? course.split(" - ")[0]?.substring(0, 3) || "GEN" : "GEN";
-    const textOptions = tp.app.vault.getFiles().filter((f: any) => f.extension === "pdf").map((f: any) => f.basename);
-    const text = await tp.system.suggester(textOptions, textOptions, "Textbook");
+    let chapterNumber = "";
+    let course = "";
+    let courseId = "";
+    let discipline = "GEN";
+    let text = "";
+
+    try {
+      if (tp && tp.system && tp.system.prompt) {
+        chapterNumber = await tp.system.prompt("Chapter Number", "") || "";
+        course = await tp.system.suggester(
+          () => tp.app.vault.getMarkdownFiles().filter((f: any) => f.path.includes("Courses")).map((f: any) => f.basename),
+          tp.app.vault.getMarkdownFiles().filter((f: any) => f.path.includes("Courses"))
+        );
+        const textOptions = tp.app.vault.getFiles().filter((f: any) => f.extension === "pdf").map((f: any) => f.basename);
+        text = await tp.system.suggester(textOptions, textOptions, "Textbook");
+      } else {
+        // Fallback values
+        chapterNumber = "";
+        course = "New Course";
+        text = "New Textbook";
+      }
+    } catch (e) {
+      console.error("Error in new_chapter prompts:", e);
+      // Default values on error
+      chapterNumber = "";
+      course = "New Course";
+      text = "New Textbook";
+    }
+
+    // Calculate derived values
+    courseId = course ? course.split(" - ")[0] || course : "";
+    discipline = course ? (course.split(" - ")[0]?.substring(0, 3) || "GEN") : "GEN";
 
     return {
-      chapterNumber: chapterNumber || "",
+      chapterNumber,
       course,
       courseId,
       discipline,
