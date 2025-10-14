@@ -120,8 +120,9 @@ jobs:
           sudo apt install gh
         fi
 
-        # Authenticate with GitHub
-        gh auth login --with-token <<< "${{ secrets.GITHUB_TOKEN }}"
+        # Set up GitHub CLI authentication using environment variable
+        echo "${{ secrets.GITHUB_TOKEN }}" > token.txt
+        gh auth login --with-token < token.txt
 
         # Create the release
         gh release create "v${VERSION}" \
@@ -131,5 +132,8 @@ jobs:
           "releases/tuckers-tools-${VERSION}.zip" \
           "releases/tuckers-tools-${VERSION}.tar.gz" \
           || echo "Release creation completed"
+
+        # Clean up token file
+        rm -f token.txt
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
