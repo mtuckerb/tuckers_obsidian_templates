@@ -1,21 +1,21 @@
-import { App, Notice } from 'obsidian';
-import { TuckersToolsSettings } from './settings';
+import { App, Notice } from "obsidian"
+import { TuckersToolsSettings } from "./settings"
 
 interface TemplateManifest {
-  version: string;
-  templates: Record<string, string>;
-  plugin_version: string;
-  release_notes: string;
+  version: string
+  templates: Record<string, string>
+  plugin_version: string
+  release_notes: string
 }
 
 export class TemplateManager {
-  app: App;
-  settings: TuckersToolsSettings;
-  manifest: TemplateManifest;
+  app: App
+  settings: TuckersToolsSettings
+  manifest: TemplateManifest
 
   constructor(app: App, settings: TuckersToolsSettings) {
-    this.app = app;
-    this.settings = settings;
+    this.app = app
+    this.settings = settings
     this.manifest = {
       version: "1.0.0",
       templates: {
@@ -30,243 +30,347 @@ export class TemplateManager {
       },
       plugin_version: "1.0.0",
       release_notes: "Initial release of Tuckers Tools templates"
-    };
+    }
   }
 
   async installTemplates() {
-    // Get Templater plugin settings to find template folder
-    const templaterPlugin = (this.app as any).plugins.plugins['templater-obsidian'];
-    if (!templaterPlugin) {
-      new Notice('Templater plugin not found. Please install and enable the Templater plugin first.');
-      console.error('Templater plugin not found. Please install and enable the Templater plugin first.');
-      return;
-    }
-
-    const templaterSettings = templaterPlugin.settings;
-    // Try different possible property names for template folder
-    const templateFolderPath = templaterSettings['template_folder'] || 
-                              templaterSettings['templateFolder'] || 
-                              templaterSettings['templateFolderPath'];
-    
-    if (!templateFolderPath) {
-      new Notice('Template folder not configured in Templater settings. Please configure it in Templater settings first.');
-      console.error('Template folder not configured in Templater settings. Please configure it in Templater settings first.');
-      return;
-    }
-
-    const fullTemplatePath = `${templateFolderPath}/${this.settings.templateFolder}`;
-    
-    // Create the main template folder if it doesn't exist
     try {
-      await this.app.vault.createFolder(fullTemplatePath);
-      console.log(`Created template folder: ${fullTemplatePath}`);
-    } catch (e) {
-      // Folder might already exist, which is fine
-      console.log(`Template folder already exists or created: ${fullTemplatePath}`);
-    }
+      // Get Templater plugin settings to find template folder
+      const templaterPlugin = this.getTemplaterPlugin()
+      if (!templaterPlugin) {
+        new Notice(
+          "Templater plugin not found. Please install and enable the Templater plugin first."
+        )
+        console.error(
+          "Templater plugin not found. Please install and enable the Templater plugin first."
+        )
+        return
+      }
 
-    // Create subdirectories
-    const subdirs = ['Courses', 'Modules', 'Chapters', 'Assignments', 'Daily', 'Utilities'];
-    for (const subdir of subdirs) {
+      const templateFolderPath = this.getTemplateFolderPath(templaterPlugin)
+      if (!templateFolderPath) {
+        new Notice(
+          "Template folder not configured in Templater settings. Please configure it in Templater settings first."
+        )
+        console.error(
+          "Template folder not configured in Templater settings. Please configure it in Templater settings first."
+        )
+        return
+      }
+
+      const fullTemplatePath = `${templateFolderPath}/${this.settings.templateFolder}`
+
+      // Create the main template folder if it doesn't exist
       try {
-        const subPath = `${fullTemplatePath}/${subdir}`;
-        await this.app.vault.createFolder(subPath);
-        console.log(`Created subdirectory: ${subPath}`);
+        await this.app.vault.createFolder(fullTemplatePath)
+        console.log(`Created template folder: ${fullTemplatePath}`)
       } catch (e) {
         // Folder might already exist, which is fine
-        console.log(`Subdirectory already exists: ${fullTemplatePath}/${subdir}`);
+        console.log(
+          `Template folder already exists or created: ${fullTemplatePath}`
+        )
+      }
+
+      // Create subdirectories
+      const subdirs = [
+        "Courses",
+        "Modules",
+        "Chapters",
+        "Assignments",
+        "Daily",
+        "Utilities"
+      ]
+      for (const subdir of subdirs) {
+        try {
+          const subPath = `${fullTemplatePath}/${subdir}`
+          await this.app.vault.createFolder(subPath)
+          console.log(`Created subdirectory: ${subPath}`)
+        } catch (e) {
+          // Folder might already exist, which is fine
+          console.log(
+            `Subdirectory already exists: ${fullTemplatePath}/${subdir}`
+          )
+        }
+      }
+
+      // Install templates
+      await this.installCourseTemplates(fullTemplatePath)
+      await this.installModuleTemplates(fullTemplatePath)
+      await this.installChapterTemplates(fullTemplatePath)
+      await this.installAssignmentTemplates(fullTemplatePath)
+      await this.installDailyTemplates(fullTemplatePath)
+      await this.installUtilityTemplates(fullTemplatePath)
+
+      // Create README
+      await this.createREADME(fullTemplatePath)
+
+      // Create template manifest
+      await this.createTemplateManifest(fullTemplatePath)
+
+      new Notice("Tuckers Tools templates installed successfully!")
+      console.log("Tuckers Tools templates installed successfully")
+    } catch (error) {
+      console.error("Error installing templates:", error)
+      new Notice("Error installing templates. Check console for details.")
+    }
+  }
+
+  private getTemplaterPlugin(): any {
+    // Try multiple ways to access the Templater plugin
+    const possiblePaths = [
+      (this.app as any).plugins.plugins["templater-obsidian"],
+      (this.app as any).plugins.plugins["templater"],
+      (this.app as any).plugins.getPlugin("templater-obsidian"),
+      (this.app as any).plugins.getPlugin("templater")
+    ]
+
+    for (const path of possiblePaths) {
+      if (path) {
+        return path
       }
     }
 
-    // Install templates
-    await this.installCourseTemplates(fullTemplatePath);
-    await this.installModuleTemplates(fullTemplatePath);
-    await this.installChapterTemplates(fullTemplatePath);
-    await this.installAssignmentTemplates(fullTemplatePath);
-    await this.installDailyTemplates(fullTemplatePath);
-    await this.installUtilityTemplates(fullTemplatePath);
-    
-    // Create README
-    await this.createREADME(fullTemplatePath);
-    
-    // Create template manifest
-    await this.createTemplateManifest(fullTemplatePath);
-    
-    new Notice('Tuckers Tools templates installed successfully!');
-    console.log('Tuckers Tools templates installed successfully');
+    return null
+  }
+
+  private getTemplateFolderPath(templaterPlugin: any): string | null {
+    const settings = templaterPlugin.settings
+
+    if (!settings) {
+      console.error("Templater plugin has no settings")
+      return null
+    }
+
+    // Try different possible property names for template folder
+    const possiblePaths = [
+      settings.template_folder,
+      settings.templateFolder,
+      settings.templateFolderPath,
+      settings.folder
+    ]
+
+    for (const path of possiblePaths) {
+      if (path && typeof path === "string") {
+        return path
+      }
+    }
+
+    console.error(
+      "Template folder not found in Templater settings. Available settings:",
+      Object.keys(settings)
+    )
+    return null
   }
 
   async createTemplateManifest(basePath: string) {
-    const manifestPath = `${basePath}/template-manifest.json`;
-    const manifestContent = JSON.stringify(this.manifest, null, 2);
-    
+    const manifestPath = `${basePath}/template-manifest.json`
+    const manifestContent = JSON.stringify(this.manifest, null, 2)
+
     try {
       // Check if manifest already exists
-      const existingManifest = this.app.vault.getAbstractFileByPath(manifestPath);
+      const existingManifest =
+        this.app.vault.getAbstractFileByPath(manifestPath)
       if (existingManifest) {
         // Update the existing manifest
-        const file = existingManifest as import('obsidian').TFile;
-        await this.app.vault.modify(file, manifestContent);
-        console.log(`Updated template manifest: ${manifestPath}`);
-        return;
+        const file = existingManifest as import("obsidian").TFile
+        await this.app.vault.modify(file, manifestContent)
+        console.log(`Updated template manifest: ${manifestPath}`)
+        return
       }
-      
+
       // Create the manifest file
-      await this.app.vault.create(manifestPath, manifestContent);
-      console.log(`Created template manifest: ${manifestPath}`);
+      await this.app.vault.create(manifestPath, manifestContent)
+      console.log(`Created template manifest: ${manifestPath}`)
     } catch (e) {
-      new Notice(`Error creating template manifest ${manifestPath}`);
-      console.error(`Error creating template manifest ${manifestPath}:`, e);
+      new Notice(`Error creating template manifest ${manifestPath}`)
+      console.error(`Error creating template manifest ${manifestPath}:`, e)
     }
   }
 
   async checkForTemplateUpdates(): Promise<boolean> {
     // This would check if templates need to be updated
     // For now, we'll just return false
-    console.log("Checking for template updates");
-    return false;
+    console.log("Checking for template updates")
+    return false
   }
 
   async updateTemplates() {
-    // This would update existing templates
-    // Let's implement a proper update functionality
-    console.log("Updating templates");
-    
-    // Get Templater plugin settings to find template folder
-    const templaterPlugin = (this.app as any).plugins.plugins['templater-obsidian'];
-    if (!templaterPlugin) {
-      new Notice('Templater plugin not found. Please install and enable the Templater plugin first.');
-      console.error('Templater plugin not found. Please install and enable the Templater plugin first.');
-      return;
-    }
+    try {
+      // This would update existing templates
+      console.log("Updating templates")
 
-    const templaterSettings = templaterPlugin.settings;
-    // Try different possible property names for template folder
-    const templateFolderPath = templaterSettings['template_folder'] || 
-                              templaterSettings['templateFolder'] || 
-                              templaterSettings['templateFolderPath'];
-    
-    if (!templateFolderPath) {
-      new Notice('Template folder not configured in Templater settings. Please configure it in Templater settings first.');
-      console.error('Template folder not configured in Templater settings. Please configure it in Templater settings first.');
-      return;
-    }
+      // Get Templater plugin settings to find template folder
+      const templaterPlugin = this.getTemplaterPlugin()
+      if (!templaterPlugin) {
+        new Notice(
+          "Templater plugin not found. Please install and enable the Templater plugin first."
+        )
+        console.error(
+          "Templater plugin not found. Please install and enable the Templater plugin first."
+        )
+        return
+      }
 
-    const fullTemplatePath = `${templateFolderPath}/${this.settings.templateFolder}`;
-    
-    // Update templates (this will overwrite existing ones)
-    await this.installCourseTemplates(fullTemplatePath);
-    await this.installModuleTemplates(fullTemplatePath);
-    await this.installChapterTemplates(fullTemplatePath);
-    await this.installAssignmentTemplates(fullTemplatePath);
-    await this.installDailyTemplates(fullTemplatePath);
-    await this.installUtilityTemplates(fullTemplatePath);
-    
-    // Update README
-    await this.createREADME(fullTemplatePath);
-    
-    // Update template manifest
-    await this.createTemplateManifest(fullTemplatePath);
-    
-    new Notice('Tuckers Tools templates updated successfully!');
-    console.log('Tuckers Tools templates updated successfully');
+      const templateFolderPath = this.getTemplateFolderPath(templaterPlugin)
+      if (!templateFolderPath) {
+        new Notice(
+          "Template folder not configured in Templater settings. Please configure it in Templater settings first."
+        )
+        console.error(
+          "Template folder not configured in Templater settings. Please configure it in Templater settings first."
+        )
+        return
+      }
+
+      const fullTemplatePath = `${templateFolderPath}/${this.settings.templateFolder}`
+
+      // Update templates (this will overwrite existing ones)
+      await this.installCourseTemplates(fullTemplatePath)
+      await this.installModuleTemplates(fullTemplatePath)
+      await this.installChapterTemplates(fullTemplatePath)
+      await this.installAssignmentTemplates(fullTemplatePath)
+      await this.installDailyTemplates(fullTemplatePath)
+      await this.installUtilityTemplates(fullTemplatePath)
+
+      // Update README
+      await this.createREADME(fullTemplatePath)
+
+      // Update template manifest
+      await this.createTemplateManifest(fullTemplatePath)
+
+      new Notice("Tuckers Tools templates updated successfully!")
+      console.log("Tuckers Tools templates updated successfully")
+    } catch (error) {
+      console.error("Error updating templates:", error)
+      new Notice("Error updating templates. Check console for details.")
+    }
   }
 
   async installCourseTemplates(basePath: string) {
-    const coursePath = `${basePath}/Courses`;
-    
+    const coursePath = `${basePath}/Courses`
+
     // Create Course Homepage template
-    const courseHomepageTemplate = this.generateCourseHomepageTemplate();
-    await this.writeTemplateFile(`${coursePath}/Create Course Homepage.md`, courseHomepageTemplate);
-    
+    const courseHomepageTemplate = this.generateCourseHomepageTemplate()
+    await this.writeTemplateFile(
+      `${coursePath}/Create Course Homepage.md`,
+      courseHomepageTemplate
+    )
+
     // Create Course Index template
-    const courseIndexTemplate = this.generateCourseIndexTemplate();
-    await this.writeTemplateFile(`${coursePath}/Course Index.md`, courseIndexTemplate);
+    const courseIndexTemplate = this.generateCourseIndexTemplate()
+    await this.writeTemplateFile(
+      `${coursePath}/Course Index.md`,
+      courseIndexTemplate
+    )
   }
 
   async installModuleTemplates(basePath: string) {
-    const modulePath = `${basePath}/Modules`;
-    
+    const modulePath = `${basePath}/Modules`
+
     // Create Module template
-    const moduleTemplate = this.generateModuleTemplate();
-    await this.writeTemplateFile(`${modulePath}/Create Module.md`, moduleTemplate);
+    const moduleTemplate = this.generateModuleTemplate()
+    await this.writeTemplateFile(
+      `${modulePath}/Create Module.md`,
+      moduleTemplate
+    )
   }
 
   async installChapterTemplates(basePath: string) {
-    const chapterPath = `${basePath}/Chapters`;
-    
+    const chapterPath = `${basePath}/Chapters`
+
     // Create Chapter template
-    const chapterTemplate = this.generateChapterTemplate();
-    await this.writeTemplateFile(`${chapterPath}/Create Chapter.md`, chapterTemplate);
+    const chapterTemplate = this.generateChapterTemplate()
+    await this.writeTemplateFile(
+      `${chapterPath}/Create Chapter.md`,
+      chapterTemplate
+    )
   }
 
   async installAssignmentTemplates(basePath: string) {
-    const assignmentPath = `${basePath}/Assignments`;
-    
+    const assignmentPath = `${basePath}/Assignments`
+
     // Create Assignment template
-    const assignmentTemplate = this.generateAssignmentTemplate();
-    await this.writeTemplateFile(`${assignmentPath}/Create Assignment.md`, assignmentTemplate);
+    const assignmentTemplate = this.generateAssignmentTemplate()
+    await this.writeTemplateFile(
+      `${assignmentPath}/Create Assignment.md`,
+      assignmentTemplate
+    )
   }
 
   async installDailyTemplates(basePath: string) {
-    const dailyPath = `${basePath}/Daily`;
-    
+    const dailyPath = `${basePath}/Daily`
+
     // Create Daily Note template
-    const dailyNoteTemplate = this.generateDailyNoteTemplate();
-    await this.writeTemplateFile(`${dailyPath}/Daily Note.md`, dailyNoteTemplate);
+    const dailyNoteTemplate = this.generateDailyNoteTemplate()
+    await this.writeTemplateFile(
+      `${dailyPath}/Daily Note.md`,
+      dailyNoteTemplate
+    )
   }
 
   async installUtilityTemplates(basePath: string) {
-    const utilityPath = `${basePath}/Utilities`;
-    
+    const utilityPath = `${basePath}/Utilities`
+
     // Create Vocabulary Entry template
-    const vocabTemplate = this.generateVocabularyTemplate();
-    await this.writeTemplateFile(`${utilityPath}/Vocabulary Entry.md`, vocabTemplate);
-    
+    const vocabTemplate = this.generateVocabularyTemplate()
+    await this.writeTemplateFile(
+      `${utilityPath}/Vocabulary Entry.md`,
+      vocabTemplate
+    )
+
     // Create Due Date Entry template
-    const dueDateTemplate = this.generateDueDateTemplate();
-    await this.writeTemplateFile(`${utilityPath}/Due Date Entry.md`, dueDateTemplate);
+    const dueDateTemplate = this.generateDueDateTemplate()
+    await this.writeTemplateFile(
+      `${utilityPath}/Due Date Entry.md`,
+      dueDateTemplate
+    )
   }
 
   async writeTemplateFile(path: string, content: string) {
     try {
       // Check if file already exists
-      const existingFile = this.app.vault.getAbstractFileByPath(path);
+      const existingFile = this.app.vault.getAbstractFileByPath(path)
       if (existingFile) {
         // For now, we'll update existing templates
         // In a real implementation, we'd check versions and offer to update
-        console.log(`Updating existing template file: ${path}`);
-        const file = existingFile as import('obsidian').TFile;
-        await this.app.vault.modify(file, content);
-        return;
+        console.log(`Updating existing template file: ${path}`)
+        const file = existingFile as import("obsidian").TFile
+        await this.app.vault.modify(file, content)
+        return
       }
-      
+
       // Create the file
-      await this.app.vault.create(path, content);
-      console.log(`Created template file: ${path}`);
+      await this.app.vault.create(path, content)
+      console.log(`Created template file: ${path}`)
     } catch (e) {
-      new Notice(`Error creating template file ${path}`);
-      console.error(`Error creating template file ${path}:`, e);
+      new Notice(`Error creating template file ${path}`)
+      console.error(`Error creating template file ${path}:`, e)
     }
   }
 
   generateCourseHomepageTemplate(): string {
     return `---
-${this.settings.useEnhancedMetadata ? `course_id: <% courseId %>
+${
+  this.settings.useEnhancedMetadata
+    ? `course_id: <% courseId %>
 course_name: <% courseName %>
 course_term: <% courseSeason %> <% courseYear %>
 course_year: <% courseYear %>
 course_semester: <% courseSeason %>
 content_type: course_homepage
 school: ${this.settings.schoolName}
-school_abbreviation: ${this.settings.schoolAbbreviation}` : `course_id: <% courseId %>
-title: <% courseName %>`}
+school_abbreviation: ${this.settings.schoolAbbreviation}`
+    : `course_id: <% courseId %>
+title: <% courseName %>`
+}
 created: <% tp.date.now("YYYY-MM-DD[T]HH:mm:ssZ") %>
 tags: 
   - course_home
   - education
   - <% courseId %>
-  - ${this.settings.schoolAbbreviation}/<% courseYear %>/<% courseSeason %>/<% courseId %>
+  - ${
+    this.settings.schoolAbbreviation
+  }/<% courseYear %>/<% courseSeason %>/<% courseId %>
 ---
 
 <%*
@@ -320,7 +424,7 @@ return engine.markdown.create(str)
 ## Due Dates
 \`\`\`dataviewjs
 // Due dates aggregation code would go here
-\`\`\``;
+\`\`\``
   }
 
   generateCourseIndexTemplate(): string {
@@ -342,20 +446,24 @@ tags:
 
 ## Vocabulary
 
-## Due Dates`;
+## Due Dates`
   }
 
   generateModuleTemplate(): string {
     return `---
-${this.settings.useEnhancedMetadata ? `course_id: <% courseId %>
+${
+  this.settings.useEnhancedMetadata
+    ? `course_id: <% courseId %>
 module_number: <% moduleNumber %>
 week_number: <% weekNumber %>
 class_day: <% dayOfWeek %>
 content_type: module
-parent_course: "[[<% course %>]]"` : `course_id: <% courseId %>
+parent_course: "[[<% course %>]]"`
+    : `course_id: <% courseId %>
 module_number: <% moduleNumber %>
 week_number: <% weekNumber %>
-class_day: <% dayOfWeek %>`}
+class_day: <% dayOfWeek %>`
+}
 created: <% tp.date.now("YYYY-MM-DD[T]HH:mm:ssZ") %>
 tags:
   - education
@@ -388,17 +496,21 @@ else if (weekNumber) { title = \`W\${weekNumber}\`}
 
 ## Vocabulary
 
-## Additional Resources`;
+## Additional Resources`
   }
 
   generateChapterTemplate(): string {
     return `---
-${this.settings.useEnhancedMetadata ? `course_id: <% courseId %>
+${
+  this.settings.useEnhancedMetadata
+    ? `course_id: <% courseId %>
 chapter_number: <% chapterNumber %>
 content_type: chapter
 parent_course: "[[<% course %>]]"
-text_reference: "[[<% text %>]]"` : `course_id: <% courseId %>
-chapter_number: <% chapterNumber %>`}
+text_reference: "[[<% text %>]]"`
+    : `course_id: <% courseId %>
+chapter_number: <% chapterNumber %>`
+}
 created: <% tp.date.now("YYYY-MM-DD[T]HH:mm:ssZ") %>
 tags:
   - education
@@ -423,19 +535,23 @@ const { chapterNumber, course, courseId, discipline, text} = await tp.user.new_c
 
 ## Discussion Questions
 
-## Further Reading`;
+## Further Reading`
   }
 
   generateAssignmentTemplate(): string {
     return `---
-${this.settings.useEnhancedMetadata ? `course_id: <% courseId %>
+${
+  this.settings.useEnhancedMetadata
+    ? `course_id: <% courseId %>
 assignment_type: <% assignmentType %>
 due_date: <% dueDate %>
 points: <% points %>
 content_type: assignment
-parent_course: "[[<% course %>]]"` : `course_id: <% courseId %>
+parent_course: "[[<% course %>]]"`
+    : `course_id: <% courseId %>
 assignment_type: <% assignmentType %>
-due_date: <% dueDate %>`}
+due_date: <% dueDate %>`
+}
 created: <% tp.date.now("YYYY-MM-DD[T]HH:mm:ssZ") %>
 status: pending
 tags:
@@ -458,7 +574,7 @@ tags:
 
 ## Grading Criteria
 
-## Resources`;
+## Resources`
   }
 
   generateDailyNoteTemplate(): string {
@@ -496,7 +612,7 @@ tags:
 
 ## Tomorrow's Plan
 
-## Reflection`;
+## Reflection`
   }
 
   generateVocabularyTemplate(): string {
@@ -507,11 +623,11 @@ tags:
 **Context**: 
 **Examples**: 
 **Related Terms**: 
-**See Also**:`;
+**See Also**:`
   }
 
   generateDueDateTemplate(): string {
-    return `| <% dueDate %> | <% assignment %> | <% status %> |`;
+    return `| <% dueDate %> | <% assignment %> | <% status %> |`
   }
 
   async createREADME(basePath: string) {
@@ -538,8 +654,8 @@ These templates are designed to work with the Tuckers Tools plugin. To use them:
 
 ## Customization
 
-Feel free to customize these templates to suit your needs. The plugin will not overwrite your changes when updating templates.`;
+Feel free to customize these templates to suit your needs. The plugin will not overwrite your changes when updating templates.`
 
-    await this.writeTemplateFile(`${basePath}/README.md`, readmeContent);
+    await this.writeTemplateFile(`${basePath}/README.md`, readmeContent)
   }
 }
