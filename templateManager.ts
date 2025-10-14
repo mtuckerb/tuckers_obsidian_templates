@@ -374,13 +374,47 @@ tags:
 ---
 
 <%*
+// Tuckers Tools Course Creation
+// 
+// NOTE: For the best experience, use the "Create New Course" command 
+// from the command palette instead of using this template directly.
+// 
+// If you encounter 'prompt() is not supported' errors, this means the 
+// tp.system functions are not available in your current context.
+// Use the plugin command instead: Command Palette → 'Create New Course'
+
 const { exec } = require("child_process");
-let courseName = await tp.system.prompt("Course Name (e.g. PSI-101 - Intro to Psych)")
-let courseSeason = await tp.system.suggester(["Fall","Winter","Spring","Summer"],["Fall","Winter","Spring","Summer"], "Season")
-let courseYear = await tp.system.prompt("Year")
-let courseId = courseName.split(' - ')[0]
-await tp.file.move(\`/\${courseYear}/\${courseSeason}/\${courseName}/\${courseName}\`)
-try {await app.vault.createFolder(\`\${courseYear}/\${courseSeason}/\${courseName}/Attachments\`)} catch (e) {}
+
+let courseName = "New Course";
+let courseSeason = "Fall"; 
+let courseYear = new Date().getFullYear().toString();
+let courseId = "COURSE_ID";
+
+// Try to use system prompts, with graceful fallback
+try {
+  if (tp && tp.system && tp.system.prompt) {
+    courseName = await tp.system.prompt("Course Name (e.g. PSI-101 - Intro to Psych)") || courseName;
+    courseSeason = await tp.system.suggester(["Fall","Winter","Spring","Summer"],["Fall","Winter","Spring","Summer"], "Season") || courseSeason;
+    courseYear = await tp.system.prompt("Year") || courseYear;
+    courseId = courseName.split(' - ')[0] || courseName.replace(/[^a-zA-Z0-9]/g, "_");
+  } else {
+    // Fallback if tp.system is not available
+    console.log("System prompts not available, use the plugin command instead");
+  }
+} catch (e) {
+  console.error("Error with system prompts:", e.message);
+  console.log("Use the plugin command: Command Palette → 'Create New Course'");
+}
+
+// Move file to appropriate location
+await tp.file.move(\`/\${courseYear}/\${courseSeason}/\${courseName}/\${courseName}\`);
+
+// Create attachments folder
+try {
+  await app.vault.createFolder(\`\${courseYear}/\${courseSeason}/\${courseName}/Attachments\`);
+} catch (e) {
+  // Folder might already exist
+}
 %>
 
 # <% courseName %>
@@ -404,8 +438,8 @@ try {await app.vault.createFolder(\`\${courseYear}/\${courseSeason}/\${courseNam
 {texts} as texts
 ---
 const availableTexts = app.vault.getFiles().filter(file => file.extension == 'pdf').map(f => f?.name)
-const escapeRegex = /[,\"\`'()]/g;
-options = availableTexts.map(t => \`option([[\${t.replace(escapeRegex,\`\\\\$1\`)}]], \${t.replace(escapeRegex,\`\\\\$1\`)})\` )
+const escapeRegex = /[,\`'()]/g;
+options = availableTexts.map(t => \`option([[\${t.replace(escapeRegex,\$1)}]], \${t.replace(escapeRegex,\$1)})\` )
 const str = \\\`INPUT[inlineListSuggester(\${options.join(", ")}):texts]\\\`
 return engine.markdown.create(str)
 \`\`\`
