@@ -9,7 +9,7 @@ module.exports = {
     "!version-bump.mjs"
   ],
   moduleNameMapper: {
-    "^obsidian$": "<rootDir>/__mocks__/obsidian.js"
+    "^obsidian$": "./__mocks__/obsidian.js"
   },
   transform: {
     "^.+\\.ts$": "babel-jest"
