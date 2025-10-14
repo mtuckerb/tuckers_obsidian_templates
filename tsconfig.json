@@ -20,5 +20,11 @@
   },
   "include": [
     "**/*.ts"
+  ],
+  "exclude": [
+    "**/*.test.ts",
+    "**/*.config.js",
+    "node_modules",
+    "__mocks__"
   ]
 }
