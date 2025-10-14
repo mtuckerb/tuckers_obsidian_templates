@@ -131,13 +131,7 @@ jobs:
         cp manifest.json releases/tuckers-tools-${VERSION}.manifest.json
 
         # Create the release
-        gh release create \"v${VERSION}\" \\
-          --title \"v${VERSION}\" \\
-          --notes-file \"releases/release-notes-v${VERSION}.md\" \\
-          --generate-notes \\
-          \"releases/tuckers-tools-${VERSION}.zip\" \\
-          \"releases/tuckers-tools-${VERSION}.tar.gz\" \\
-          \"releases/tuckers-tools-${VERSION}.manifest.json\"
+        gh release create "v${VERSION}" --title "v${VERSION}" --notes-file "releases/release-notes-v${VERSION}.md" --generate-notes "releases/tuckers-tools-${VERSION}.zip" "releases/tuckers-tools-${VERSION}.tar.gz" "releases/tuckers-tools-${VERSION}.manifest.json"
 
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
