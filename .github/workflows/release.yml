@@ -111,7 +111,7 @@ jobs:
       run: |
         VERSION=${{ steps.version-check.outputs.version }}
 
-        # Check if GitHub CLI is available and authenticated
+        # Check if GitHub CLI is available
         if ! command -v gh &> /dev/null; then
           echo "GitHub CLI not found, installing..."
           curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
@@ -120,9 +120,8 @@ jobs:
           sudo apt install gh
         fi
 
-        # Set up GitHub CLI authentication using environment variable
-        echo "${{ secrets.GITHUB_TOKEN }}" > token.txt
-        gh auth login --with-token < token.txt
+        # GitHub CLI is already authenticated in GitHub Actions by default
+        # Using the GITHUB_TOKEN environment variable passed to the action
 
         # Create the release
         gh release create "v${VERSION}" \
@@ -130,10 +129,7 @@ jobs:
           --notes-file "releases/release-notes-v${VERSION}.md" \
           --generate-notes \
           "releases/tuckers-tools-${VERSION}.zip" \
-          "releases/tuckers-tools-${VERSION}.tar.gz" \
-          || echo "Release creation completed"
+          "releases/tuckers-tools-${VERSION}.tar.gz"
 
-        # Clean up token file
-        rm -f token.txt
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
