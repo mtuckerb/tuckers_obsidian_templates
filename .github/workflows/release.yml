@@ -128,7 +128,7 @@ jobs:
         # Using the GITHUB_TOKEN environment variable passed to the action
 
         # Create the release
-        gh release create "v${VERSION}" --title "v${VERSION}" --notes-file "releases/release-notes-v${VERSION}.md" --generate-notes "releases/tuckers-tools-${VERSION}.zip" "releases/tuckers-tools-${VERSION}.tar.gz" "manifest.json"
+        gh release create "v${VERSION}" --title "v${VERSION}" --notes-file "releases/release-notes-v${VERSION}.md" --generate-notes "releases/tuckers-tools-${VERSION}.zip" "releases/tuckers-tools-${VERSION}.tar.gz" "manifest.json" "main.js" "styles.css"
 
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
