@@ -1,4 +1,4 @@
-import { App } from 'obsidian';
+import { App, Notice } from 'obsidian';
 import { TuckersToolsSettings } from './settings';
 
 interface TemplateManifest {
@@ -37,15 +37,20 @@ export class TemplateManager {
     // Get Templater plugin settings to find template folder
     const templaterPlugin = (this.app as any).plugins.plugins['templater-obsidian'];
     if (!templaterPlugin) {
-      console.error('Templater plugin not found');
+      new Notice('Templater plugin not found. Please install and enable the Templater plugin first.');
+      console.error('Templater plugin not found. Please install and enable the Templater plugin first.');
       return;
     }
 
     const templaterSettings = templaterPlugin.settings;
-    const templateFolderPath = templaterSettings['template_folder'];
-
+    // Try different possible property names for template folder
+    const templateFolderPath = templaterSettings['template_folder'] || 
+                              templaterSettings['templateFolder'] || 
+                              templaterSettings['templateFolderPath'];
+    
     if (!templateFolderPath) {
-      console.error('Template folder not configured in Templater settings');
+      new Notice('Template folder not configured in Templater settings. Please configure it in Templater settings first.');
+      console.error('Template folder not configured in Templater settings. Please configure it in Templater settings first.');
       return;
     }
 
@@ -54,17 +59,22 @@ export class TemplateManager {
     // Create the main template folder if it doesn't exist
     try {
       await this.app.vault.createFolder(fullTemplatePath);
+      console.log(`Created template folder: ${fullTemplatePath}`);
     } catch (e) {
       // Folder might already exist, which is fine
+      console.log(`Template folder already exists or created: ${fullTemplatePath}`);
     }
 
     // Create subdirectories
     const subdirs = ['Courses', 'Modules', 'Chapters', 'Assignments', 'Daily', 'Utilities'];
     for (const subdir of subdirs) {
       try {
-        await this.app.vault.createFolder(`${fullTemplatePath}/${subdir}`);
+        const subPath = `${fullTemplatePath}/${subdir}`;
+        await this.app.vault.createFolder(subPath);
+        console.log(`Created subdirectory: ${subPath}`);
       } catch (e) {
         // Folder might already exist, which is fine
+        console.log(`Subdirectory already exists: ${fullTemplatePath}/${subdir}`);
       }
     }
 
@@ -82,6 +92,7 @@ export class TemplateManager {
     // Create template manifest
     await this.createTemplateManifest(fullTemplatePath);
     
+    new Notice('Tuckers Tools templates installed successfully!');
     console.log('Tuckers Tools templates installed successfully');
   }
 
@@ -93,14 +104,18 @@ export class TemplateManager {
       // Check if manifest already exists
       const existingManifest = this.app.vault.getAbstractFileByPath(manifestPath);
       if (existingManifest) {
-        // For now, we won't overwrite the manifest
-        // In a real implementation, we'd check versions and offer to update
+        // Update the existing manifest
+        const file = existingManifest as import('obsidian').TFile;
+        await this.app.vault.modify(file, manifestContent);
+        console.log(`Updated template manifest: ${manifestPath}`);
         return;
       }
       
       // Create the manifest file
       await this.app.vault.create(manifestPath, manifestContent);
+      console.log(`Created template manifest: ${manifestPath}`);
     } catch (e) {
+      new Notice(`Error creating template manifest ${manifestPath}`);
       console.error(`Error creating template manifest ${manifestPath}:`, e);
     }
   }
@@ -114,14 +129,47 @@ export class TemplateManager {
 
   async updateTemplates() {
     // This would update existing templates
-    // For now, we'll just log that it would be called
+    // Let's implement a proper update functionality
     console.log("Updating templates");
     
-    // In a real implementation, this would:
-    // 1. Check template manifest for version information
-    // 2. Compare with current template versions
-    // 3. Update templates that have newer versions
-    // 4. Preserve user customizations
+    // Get Templater plugin settings to find template folder
+    const templaterPlugin = (this.app as any).plugins.plugins['templater-obsidian'];
+    if (!templaterPlugin) {
+      new Notice('Templater plugin not found. Please install and enable the Templater plugin first.');
+      console.error('Templater plugin not found. Please install and enable the Templater plugin first.');
+      return;
+    }
+
+    const templaterSettings = templaterPlugin.settings;
+    // Try different possible property names for template folder
+    const templateFolderPath = templaterSettings['template_folder'] || 
+                              templaterSettings['templateFolder'] || 
+                              templaterSettings['templateFolderPath'];
+    
+    if (!templateFolderPath) {
+      new Notice('Template folder not configured in Templater settings. Please configure it in Templater settings first.');
+      console.error('Template folder not configured in Templater settings. Please configure it in Templater settings first.');
+      return;
+    }
+
+    const fullTemplatePath = `${templateFolderPath}/${this.settings.templateFolder}`;
+    
+    // Update templates (this will overwrite existing ones)
+    await this.installCourseTemplates(fullTemplatePath);
+    await this.installModuleTemplates(fullTemplatePath);
+    await this.installChapterTemplates(fullTemplatePath);
+    await this.installAssignmentTemplates(fullTemplatePath);
+    await this.installDailyTemplates(fullTemplatePath);
+    await this.installUtilityTemplates(fullTemplatePath);
+    
+    // Update README
+    await this.createREADME(fullTemplatePath);
+    
+    // Update template manifest
+    await this.createTemplateManifest(fullTemplatePath);
+    
+    new Notice('Tuckers Tools templates updated successfully!');
+    console.log('Tuckers Tools templates updated successfully');
   }
 
   async installCourseTemplates(basePath: string) {
@@ -185,14 +233,19 @@ export class TemplateManager {
       // Check if file already exists
       const existingFile = this.app.vault.getAbstractFileByPath(path);
       if (existingFile) {
-        // For now, we won't overwrite existing templates
+        // For now, we'll update existing templates
         // In a real implementation, we'd check versions and offer to update
+        console.log(`Updating existing template file: ${path}`);
+        const file = existingFile as import('obsidian').TFile;
+        await this.app.vault.modify(file, content);
         return;
       }
       
       // Create the file
       await this.app.vault.create(path, content);
+      console.log(`Created template file: ${path}`);
     } catch (e) {
+      new Notice(`Error creating template file ${path}`);
       console.error(`Error creating template file ${path}:`, e);
     }
   }

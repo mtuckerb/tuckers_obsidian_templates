@@ -1,0 +1,140 @@
+name: Release Plugin
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'manifest.json'
+  workflow_dispatch:
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+
+    - name: Install dependencies
+      run: |
+        npm ci
+
+    - name: Check version change
+      id: version-check
+      run: |
+        # Get current version from manifest.json
+        CURRENT_VERSION=$(grep -o '"version": "[^"]*"' manifest.json | cut -d'"' -f4)
+
+        # Check if this version was already released
+        if gh release view "v${CURRENT_VERSION}" >/dev/null 2>&1; then
+          echo "Version v${CURRENT_VERSION} already exists"
+          echo "should_release=false" >> $GITHUB_OUTPUT
+        else
+          echo "New version detected: v${CURRENT_VERSION}"
+          echo "should_release=true" >> $GITHUB_OUTPUT
+          echo "version=${CURRENT_VERSION}" >> $GITHUB_OUTPUT
+        fi
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Build plugin
+      if: steps.version-check.outputs.should_release == 'true'
+      run: |
+        npm run build
+
+    - name: Run tests
+      if: steps.version-check.outputs.should_release == 'true'
+      run: |
+        npm test
+
+    - name: Create release
+      if: steps.version-check.outputs.should_release == 'true'
+      run: |
+        VERSION=${{ steps.version-check.outputs.version }}
+
+        # Create release directory and files
+        ./release.sh
+
+        # Generate release notes
+        cat > "releases/release-notes-v${VERSION}.md" << EOF
+        # Tuckers Tools v${VERSION}
+
+        ## What's Changed
+
+        - Enhanced course creation wizard with interactive prompts
+        - Comprehensive vocabulary extraction and indexing
+        - Advanced due dates parsing and filtering
+        - Daily notes integration with activity tracking
+        - Improved template management system
+
+        ## New Features
+
+        - **Course Creation**: Interactive course creation with folder structure generation
+        - **Vocabulary Management**: Extract and index vocabulary from course notes
+        - **Due Dates Tracking**: Parse due dates from tables and generate summaries
+        - **Daily Integration**: Track academic activities and generate daily summaries
+
+        ## Bug Fixes
+
+        - Fixed template generation issues
+        - Improved error handling and user feedback
+        - Enhanced settings validation
+
+        ## Installation
+
+        1. Download the \`tuckers-tools-${VERSION}.zip\` file from this release
+        2. Extract it to your Obsidian plugins directory
+        3. Enable the plugin in Obsidian settings
+        4. Configure the plugin settings according to the documentation
+
+        ## Requirements
+
+        - Obsidian v0.15.0 or higher
+        - Templater plugin
+        - Meta Bind plugin
+        - Dataview plugin
+
+        ## Usage
+
+        Use the command palette to access new features:
+        - "Create New Course" - Launch the course creation wizard
+        - "Extract Course Vocabulary" - Generate vocabulary index for a course
+        - "Generate Due Dates Summary" - Create due dates overview
+        - "Generate Daily Academic Summary" - Track daily academic activities
+        EOF
+
+    - name: Create GitHub release
+      if: steps.version-check.outputs.should_release == 'true'
+      run: |
+        VERSION=${{ steps.version-check.outputs.version }}
+
+        # Check if GitHub CLI is available and authenticated
+        if ! command -v gh &> /dev/null; then
+          echo "GitHub CLI not found, installing..."
+          curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
+          echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/githubcli.list > /dev/null
+          sudo apt update
+          sudo apt install gh
+        fi
+
+        # Authenticate with GitHub
+        gh auth login --with-token <<< "${{ secrets.GITHUB_TOKEN }}"
+
+        # Create the release
+        gh release create "v${VERSION}" \
+          --title "v${VERSION}" \
+          --notes-file "releases/release-notes-v${VERSION}.md" \
+          --generate-notes \
+          "releases/tuckers-tools-${VERSION}.zip" \
+          "releases/tuckers-tools-${VERSION}.tar.gz" \
+          || echo "Release creation completed"
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

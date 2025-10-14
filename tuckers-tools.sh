@@ -1,4 +1,4 @@
-#!/nix/store/7xqn2kis5gaa01r6p95zw700k4lw0lxp-bash-interactive-5.3p3/bin/bash
+#!/usr/bin/env bash
 
 # All-in-one script for Tuckers Tools plugin
 
@@ -30,15 +30,25 @@ case "$1" in
     echo "Creating release..."
     ./release.sh
     ;;
+  github-release)
+    echo "Creating GitHub release..."
+    ./github-release.sh
+    ;;
+  install-gh)
+    echo "Installing GitHub CLI..."
+    ./install-gh.sh
+    ;;
   *)
-    echo "Usage: $0 {install|build|dev|test|clean|release}"
+    echo "Usage: $0 {install|build|dev|test|clean|release|github-release|install-gh}"
     echo ""
     echo "Commands:"
-    echo "  install  - Install dependencies"
-    echo "  build    - Build the plugin"
-    echo "  dev      - Start development environment"
-    echo "  test     - Run tests"
-    echo "  clean    - Clean build artifacts"
-    echo "  release  - Create a release"
+    echo "  install        - Install dependencies"
+    echo "  build          - Build the plugin"
+    echo "  dev            - Start development environment"
+    echo "  test           - Run tests"
+    echo "  clean          - Clean build artifacts"
+    echo "  release        - Create a release"
+    echo "  github-release - Create a GitHub release"
+    echo "  install-gh     - Install GitHub CLI"
     ;;
 esac

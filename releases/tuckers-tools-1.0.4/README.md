@@ -81,6 +81,20 @@ Tuckers Tools maintains full backwards compatibility with existing note structur
 
 Contributions are welcome! Please feel free to submit issues and pull requests.
 
+## Releasing
+
+To create a new release:
+
+1. Update the version in `manifest.json`
+2. Run `./tuckers-tools.sh release` to create a local release
+3. Run `./tuckers-tools.sh github-release` to create a GitHub release
+
+The release process will:
+- Create a new git tag
+- Generate release notes
+- Package the plugin files
+- Create or update the GitHub release
+
 ## License
 
 MIT License
