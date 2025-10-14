@@ -1,7 +1,7 @@
 // Jest setup file to mock Obsidian modules for testing
 
-// Mock the obsidian module
-jest.mock("obsidian", () => ({
+// Manually mock obsidian by overriding require cache
+const mockObsidian = {
   App: jest.fn().mockImplementation(() => ({
     vault: {
       create: jest.fn().mockResolvedValue(undefined),
