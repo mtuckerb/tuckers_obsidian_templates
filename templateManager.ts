@@ -143,6 +143,7 @@ export class TemplateManager {
 
     // Try different possible property names for template folder
     const possiblePaths = [
+      settings.templates_folder,  // Changed from template_folder to match actual setting
       settings.template_folder,
       settings.templateFolder,
       settings.templateFolderPath,

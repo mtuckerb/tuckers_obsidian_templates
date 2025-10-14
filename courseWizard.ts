@@ -3,6 +3,7 @@
 import { App, Notice, TFile } from "obsidian"
 import { TuckersToolsSettings } from "./settings"
 import { slugify } from "./utils"
+import { InputModal, SuggesterModal } from "./inputModal"
 
 export class CourseCreationWizard {
   app: App
@@ -97,22 +98,32 @@ export class CourseCreationWizard {
     validator: (value: string) => boolean,
     errorMessage: string
   ): Promise<string | null> {
-    // Use a simple prompt for now - in a real implementation, this would use a proper modal
-    const value = prompt(`${title}: ${message}`)
+    return new Promise((resolve) => {
+      const modal = new InputModal(this.app, (result) => {
+        if (result === null) {
+          // User cancelled
+          resolve(null);
+          return;
+        }
 
-    if (!value) return null // User cancelled
+        if (!validator(result)) {
+          new Notice(errorMessage);
+          // Recursively call again if validation fails
+          this.promptWithValidation(title, message, validator, errorMessage)
+            .then(resolve);
+          return;
+        }
 
-    if (!validator(value)) {
-      new Notice(errorMessage)
-      return await this.promptWithValidation(
-        title,
-        message,
-        validator,
-        errorMessage
-      )
-    }
+        resolve(result.trim());
+      });
 
-    return value.trim()
+      // Set the title and message differently since our modal is simple
+      modal.titleEl.setText(title);
+      const messageEl = modal.contentEl.createDiv();
+      messageEl.setText(message);
+
+      modal.open();
+    });
   }
 
   private async promptWithOptions(
@@ -120,20 +131,31 @@ export class CourseCreationWizard {
     message: string,
     options: string[]
   ): Promise<string | null> {
-    // Use a simple confirm dialog for now - in a real implementation, this would use a proper modal
-    const choice = prompt(
-      `${title}: ${message}\nOptions: ${options.join(", ")}\nEnter your choice:`
-    )
+    return new Promise((resolve) => {
+      const modal = new SuggesterModal(this.app, options, (result) => {
+        if (result === null) {
+          // User cancelled
+          resolve(null);
+          return;
+        }
 
-    if (!choice) return null // User cancelled
+        if (options.includes(result)) {
+          resolve(result);
+        } else {
+          new Notice(`Please select one of: ${options.join(", ")}`);
+          // Recursively call again if choice is invalid
+          this.promptWithOptions(title, message, options)
+            .then(resolve);
+        }
+      });
 
-    const trimmedChoice = choice.trim()
-    if (options.includes(trimmedChoice)) {
-      return trimmedChoice
-    }
+      // Set the title
+      modal.titleEl.setText(title);
+      const messageEl = modal.contentEl.createDiv();
+      messageEl.setText(message);
 
-    new Notice(`Please select one of: ${options.join(", ")}`)
-    return await this.promptWithOptions(title, message, options)
+      modal.open();
+    });
   }
 
   private async createCourseFolderStructure(courseDetails: {
