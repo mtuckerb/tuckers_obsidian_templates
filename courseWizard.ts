@@ -209,15 +209,17 @@ school: ${this.settings.schoolName}
 school_abbreviation: ${this.settings.schoolAbbreviation}`
     : `course_id: ${courseDetails.courseId}
 title: ${courseDetails.courseName}`
+}
 created: ${new Date().toISOString()}
 tags:
-  - course_home
-  - education
-  - ${courseDetails.courseId}
-  - ${this.settings.schoolAbbreviation}/${courseDetails.courseYear}/${
+ - course_home
+ - education
+ - ${courseDetails.courseId}
+ - ${this.settings.schoolAbbreviation}/${courseDetails.courseYear}/${
       courseDetails.courseSeason
     }/${courseDetails.courseId}
 ---
+
 
 # ${courseDetails.courseName}
 
