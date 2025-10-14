@@ -34,6 +34,9 @@ export default class TuckersToolsPlugin extends Plugin {
     // Add settings tab
     this.addSettingTab(new TuckersToolsSettingTab(this.app, this))
 
+    // Initialize templater functions if templater is available
+    this.initializeTemplaterFunctions()
+
     // Add commands
     this.addCommand({
       id: "install-templates",
@@ -116,6 +119,76 @@ export default class TuckersToolsPlugin extends Plugin {
 
   onunload() {
     console.log("Unloading Tuckers Tools plugin")
+  }
+
+  async initializeTemplaterFunctions() {
+    // Check if Templater plugin is available
+    const templaterPlugin = (this.app as any).plugins.getPlugin("templater-obsidian");
+    if (!templaterPlugin) {
+      console.log("Templater plugin not found. Course templates will not work properly.");
+      return;
+    }
+
+    // Register user functions with Templater
+    templaterPlugin.templater.functions_manager.add_from_js_function({
+      name: "new_module",
+      f: (app: any, tp: any, year: any) => {
+        return this.newModuleFunction(app, tp, year);
+      },
+      doc: "Creates a new module with interactive prompts"
+    });
+
+    templaterPlugin.templater.functions_manager.add_from_js_function({
+      name: "new_chapter",
+      f: (tp: any) => {
+        return this.newChapterFunction(tp);
+      },
+      doc: "Creates a new chapter with interactive prompts"
+    });
+  }
+
+  async newModuleFunction(app: any, tp: any, year: string) {
+    // Prompt user for module details
+    const moduleNumber = await tp.system.prompt("Module Number (optional)", "");
+    const weekNumber = await tp.system.prompt("Week Number (optional)", "");
+    const course = await tp.system.suggester(
+      () => app.vault.getMarkdownFiles().filter((f: any) => f.path.includes("Courses")).map((f: any) => f.basename),
+      app.vault.getMarkdownFiles().filter((f: any) => f.path.includes("Courses"))
+    );
+    const courseId = course ? course.split(" - ")[0] || course : "";
+    const discipline = course ? course.split(" - ")[0]?.substring(0, 3) || "GEN" : "GEN";
+    const dayOptions = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+    const dayOfWeek = await tp.system.suggester(dayOptions, dayOptions, "Day of Week");
+
+    return {
+      season: "Fall", // This would normally be dynamically determined
+      moduleNumber: moduleNumber || null,
+      weekNumber: weekNumber || null,
+      course,
+      courseId,
+      discipline,
+      dayOfWeek
+    };
+  }
+
+  async newChapterFunction(tp: any) {
+    const chapterNumber = await tp.system.prompt("Chapter Number", "");
+    const course = await tp.system.suggester(
+      () => tp.app.vault.getMarkdownFiles().filter((f: any) => f.path.includes("Courses")).map((f: any) => f.basename),
+      tp.app.vault.getMarkdownFiles().filter((f: any) => f.path.includes("Courses"))
+    );
+    const courseId = course ? course.split(" - ")[0] || course : "";
+    const discipline = course ? course.split(" - ")[0]?.substring(0, 3) || "GEN" : "GEN";
+    const textOptions = tp.app.vault.getFiles().filter((f: any) => f.extension === "pdf").map((f: any) => f.basename);
+    const text = await tp.system.suggester(textOptions, textOptions, "Textbook");
+
+    return {
+      chapterNumber: chapterNumber || "",
+      course,
+      courseId,
+      discipline,
+      text
+    };
   }
 
   async loadSettings() {
