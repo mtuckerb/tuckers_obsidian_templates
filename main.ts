@@ -130,21 +130,30 @@ export default class TuckersToolsPlugin extends Plugin {
     }
 
     // Register user functions with Templater
-    templaterPlugin.templater.functions_manager.add_from_js_function({
-      name: "new_module",
-      f: (app: any, tp: any, year: any) => {
-        return this.newModuleFunction(app, tp, year);
-      },
-      doc: "Creates a new module with interactive prompts"
-    });
+    try {
+      // Try to add functions via different methods depending on the Templater version
+      if (templaterPlugin && templaterPlugin.templater) {
+        // Create a user function manager object if it doesn't exist
+        if (!templaterPlugin.templater.functions) {
+          templaterPlugin.templater.functions = {};
+        }
 
-    templaterPlugin.templater.functions_manager.add_from_js_function({
-      name: "new_chapter",
-      f: (tp: any) => {
-        return this.newChapterFunction(tp);
-      },
-      doc: "Creates a new chapter with interactive prompts"
-    });
+        // Add our custom functions directly to the templater functions object
+        templaterPlugin.templater.functions["new_module"] = async (app: any, tp: any, year: any) => {
+          return this.newModuleFunction(app, tp, year);
+        };
+
+        templaterPlugin.templater.functions["new_chapter"] = async (tp: any) => {
+          return this.newChapterFunction(tp);
+        };
+
+        console.log("Tuckers Tools templater functions registered successfully");
+      } else {
+        console.error("Could not register templater functions - templater object not found");
+      }
+    } catch (e) {
+      console.error("Error registering templater functions:", e);
+    }
   }
 
   async newModuleFunction(app: any, tp: any, year: string) {
