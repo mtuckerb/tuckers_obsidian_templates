@@ -350,41 +350,28 @@ export class TemplateManager {
   }
 
   generateCourseHomepageTemplate(): string {
-    return `---
-${
-  this.settings.useEnhancedMetadata
-    ? `course_id: <% courseId %>
-course_name: <% courseName %>
-course_term: <% courseSeason %> <% courseYear %>
+    const enhancedMetadata = this.settings.useEnhancedMetadata;
+    
+    if (enhancedMetadata) {
+      return `---
+course_id: <% courseId %>
+course_season: <% courseSeason %>
 course_year: <% courseYear %>
-course_semester: <% courseSeason %>
-content_type: course_homepage
-school: ${this.settings.schoolName}
-school_abbreviation: ${this.settings.schoolAbbreviation}`
-    : `course_id: <% courseId %>
-title: <% courseName %>`
-}
 created: <% tp.date.now("YYYY-MM-DD[T]HH:mm:ssZ") %>
 tags: 
+  - <% courseId %>
+  - ${this.settings.schoolAbbreviation}/<% courseYear %>/<% courseSeason %>/<% courseId %>/
   - course_home
   - education
-  - <% courseId %>
-  - ${
-    this.settings.schoolAbbreviation
-  }/<% courseYear %>/<% courseSeason %>/<% courseId %>
+  - ${this.settings.schoolName.replace(/\s+/g, '_')}
+banner:
+cssclasses:
+  - whiteboard-course
 ---
 
 <%*
 // Tuckers Tools Course Creation
-// 
-// NOTE: For the best experience, use the "Create New Course" command 
-// from the command palette instead of using this template directly.
-// 
-// If you encounter 'prompt() is not supported' errors, this means the 
-// tp.system functions are not available in your current context.
-// Use the plugin command instead: Command Palette → 'Create New Course'
-
-const { exec } = require("child_process");
+// For best experience, use the plugin command: Command Palette → 'Create New Course'
 
 let courseName = "New Course";
 let courseSeason = "Fall"; 
@@ -394,12 +381,11 @@ let courseId = "COURSE_ID";
 // Try to use system prompts, with graceful fallback
 try {
   if (tp && tp.system && tp.system.prompt) {
-    courseName = await tp.system.prompt("Course Name (e.g. PSI-101 - Intro to Psych)") || courseName;
+    courseName = await tp.system.prompt("Course Name (e.g. SWO-250 - Course Title)") || courseName;
+    courseId = courseName.split(' - ')[0] || courseName.replace(/[^a-zA-Z0-9]/g, "_");
     courseSeason = await tp.system.suggester(["Fall","Winter","Spring","Summer"],["Fall","Winter","Spring","Summer"], "Season") || courseSeason;
     courseYear = await tp.system.prompt("Year") || courseYear;
-    courseId = courseName.split(' - ')[0] || courseName.replace(/[^a-zA-Z0-9]/g, "_");
   } else {
-    // Fallback if tp.system is not available
     console.log("System prompts not available, use the plugin command instead");
   }
 } catch (e) {
@@ -412,7 +398,179 @@ await tp.file.move(\`/\${courseYear}/\${courseSeason}/\${courseName}/\${courseNa
 
 // Create attachments folder
 try {
-  await app.vault.createFolder(\`\${courseYear}/\${courseSeason}/\${courseName}/Attachments\`);
+  await app.vault.createFolder(\`/\${courseYear}/\${courseSeason}/\${courseName}/Attachments\`);
+} catch (e) {
+  // Folder might already exist
+}
+%>
+
+# <% courseName %>
+
+## Course Information
+**Course**: <% courseName %>
+**Course ID**: <% courseId %>
+**Term**: <% courseSeason %> <% courseYear %>
+**School**: ${this.settings.schoolName}
+
+## Instructor
+**Name**: \`INPUT[text(instructor_name)]\`
+**Email**: \`INPUT[text(instructor_email)]\`
+**Office Hours**: \`INPUT[text(instructor_office_hours)]\`
+**Office Location**: \`INPUT[text(instructor_office_location)]\`
+
+## Course Description
+\`INPUT[multiline(10x50)(course_description)]\`
+
+## Learning Objectives
+\`INPUT[multiline(10x50)(learning_objectives)]\`
+
+## Required Texts
+\`\`\`meta-bind-js-view
+{texts} as texts
+---
+const availableTexts = app.vault.getFiles().filter(file => file.extension == 'pdf').map(f => f?.name)
+const escapeRegex = /[,\`'()]/g;
+options = availableTexts.map(t => \`option([[\${t.replace(escapeRegex,\$1)}]], \${t.replace(escapeRegex,\$1)})\` )
+const str = \\\`INPUT[inlineListSuggester(\${options.join(", ")}):texts]\\\`
+return engine.markdown.create(str)
+\`\`\`
+
+## Course Schedule
+\`INPUT[multiline(20x50)(course_schedule)]\`
+
+## Assignments
+\`INPUT[multiline(15x50)(assignments)]\`
+
+## Resources
+\`INPUT[multiline(10x50)(resources)]\`
+
+## Vocabulary
+\`\`\`dataviewjs
+const {processCourseVocabulary} = require("${this.settings.dataviewJsPath || "/Supporting/dataview-functions"}");
+processCourseVocabulary(dv, '<% courseId %>');
+\`\`\`
+
+## Due Dates
+\`\`\`dataviewjs
+function processDueDates(dv, tag) {
+  // Find all pages with the specified tag
+  const pages = dv.pages(tag).file;
+
+  // Array to store all rows
+  const allRows = [];
+
+  // For each page, extract the "Due Dates" section
+  for (const page of pages.values()) {
+    const content = app.vault.cachedRead(app.vault.getAbstractFileByPath(page.path));
+    const regex = /# Due Dates\\s*
+((?:.|
+)*?)(?=
+#|\\\$)/;
+    const match = content.match(regex);
+    
+    if (match && match[1]) {
+      const tableContent = match[1];
+      // Split content into lines and process table rows
+      const lines = tableContent.split('
+');
+      
+      for (const line of lines) {
+        // Check if the line looks like a table row (contains | characters)
+        if (line.includes('|')) {
+          const columns = line.split('|').map(col => col.trim()).filter(col => col !== '');
+          
+          if (columns.length >= 2) { // Ensure there are at least 2 columns (due date, task)
+            // Parse the date to check if it's valid
+            const dueDate = columns[0];
+            if (!Date.parse(dueDate)) continue; // Skip if not a valid date
+            
+            // Add the row data to the collection
+            allRows.push([columns[0], columns[1], \`[[\${page.path}|\${page.name}]]\`]);
+          }
+        }
+      }
+    }
+  }
+
+  // Function to remove duplicate rows based on the first two columns
+  const deduplicateFirstTwoColumns = (rows) => {
+    const seen = new Set();
+    return rows.filter(row => {
+      const key = JSON.stringify([row[0], row[1]]); // Combine first two columns as a key
+      if (seen.has(key)) {
+        return false;
+      }
+      seen.add(key);
+      return true;
+    });
+  };
+  
+  // Remove duplicates based on first two columns
+  const allUniqueRows = deduplicateFirstTwoColumns(allRows);
+
+  // Sort rows by date (parse the date string for comparison)
+  const sortedRows = allUniqueRows.sort((a, b) => new Date(a[0]) - new Date(b[0]));
+
+  // Create the table with the collected data
+  const table = dv.markdownTable(
+    ["Due Date", "Task Description", "File"], 
+    sortedRows
+  );
+
+  return table;
+}
+
+processDueDates(dv,'#<% courseId %>');
+\`\`\`
+
+## Class Materials
+\`INPUT[multiline(10x50)(class_materials)]\`
+
+## Classmates
+\`INPUT[multiline(15x50)(classmates)]\``;
+    } else {
+      return `---
+course_id: <% courseId %>
+course_name: <% courseName %>
+course_season: <% courseSeason %>
+course_year: <% courseYear %>
+created: <% tp.date.now("YYYY-MM-DD[T]HH:mm:ssZ") %>
+tags:
+  - <% courseId %>
+  - course_home
+  - education
+---
+
+<%*
+// Tuckers Tools Course Creation
+// For best experience, use the plugin command: Command Palette → 'Create New Course'
+
+let courseName = "New Course";
+let courseSeason = "Fall"; 
+let courseYear = new Date().getFullYear().toString();
+let courseId = "COURSE_ID";
+
+// Try to use system prompts, with graceful fallback
+try {
+  if (tp && tp.system && tp.system.prompt) {
+    courseName = await tp.system.prompt("Course Name (e.g. SWO-250 - Course Title)") || courseName;
+    courseId = courseName.split(' - ')[0] || courseName.replace(/[^a-zA-Z0-9]/g, "_");
+    courseSeason = await tp.system.suggester(["Fall","Winter","Spring","Summer"],["Fall","Winter","Spring","Summer"], "Season") || courseSeason;
+    courseYear = await tp.system.prompt("Year") || courseYear;
+  } else {
+    console.log("System prompts not available, use the plugin command instead");
+  }
+} catch (e) {
+  console.error("Error with system prompts:", e.message);
+  console.log("Use the plugin command: Command Palette → 'Create New Course'");
+}
+
+// Move file to appropriate location
+await tp.file.move(\`/\${courseYear}/\${courseSeason}/\${courseName}/\${courseName}\`);
+
+// Create attachments folder
+try {
+  await app.vault.createFolder(\`/\${courseYear}/\${courseSeason}/\${courseName}/Attachments\`);
 } catch (e) {
   // Folder might already exist
 }
@@ -426,13 +584,16 @@ try {
 **School**: ${this.settings.schoolName}
 
 ## Instructor
-**Name**: 
-**Email**: 
-**Office Hours**: 
+**Name**: \`INPUT[text(instructor_name)]\`
+**Email**: \`INPUT[text(instructor_email)]\`
+**Office Hours**: \`INPUT[text(instructor_office_hours)]\`
+**Office Location**: \`INPUT[text(instructor_office_location)]\`
 
 ## Course Description
+\`INPUT[multiline(10x50)(course_description)]\`
 
 ## Learning Objectives
+\`INPUT[multiline(10x50)(learning_objectives)]\`
 
 ## Required Texts
 \`\`\`meta-bind-js-view
@@ -446,20 +607,93 @@ return engine.markdown.create(str)
 \`\`\`
 
 ## Schedule
+\`INPUT[multiline(15x50)(course_schedule)]\`
 
 ## Assignments
+\`INPUT[multiline(10x50)(assignments)]\`
 
 ## Resources
+\`INPUT[multiline(10x50)(resources)]\`
 
 ## Vocabulary
 \`\`\`dataviewjs
-// Vocabulary aggregation code would go here
+const {processCourseVocabulary} = require("${this.settings.dataviewJsPath || "/Supporting/dataview-functions"}");
+processCourseVocabulary(dv, '<% courseId %>');
 \`\`\`
 
 ## Due Dates
 \`\`\`dataviewjs
-// Due dates aggregation code would go here
-\`\`\``
+function processDueDates(dv, tag) {
+  // Find all pages with the specified tag
+  const pages = dv.pages(tag).file;
+
+  // Array to store all rows
+  const allRows = [];
+
+  // For each page, extract the "Due Dates" section
+  for (const page of pages.values()) {
+    const content = app.vault.cachedRead(app.vault.getAbstractFileByPath(page.path));
+    const regex = /# Due Dates\\s*
+((?:.|
+)*?)(?=
+#|\\\$)/;
+    const match = content.match(regex);
+    
+    if (match && match[1]) {
+      const tableContent = match[1];
+      // Split content into lines and process table rows
+      const lines = tableContent.split('
+');
+      
+      for (const line of lines) {
+        // Check if the line looks like a table row (contains | characters)
+        if (line.includes('|')) {
+          const columns = line.split('|').map(col => col.trim()).filter(col => col !== '');
+          
+          if (columns.length >= 2) { // Ensure there are at least 2 columns (due date, task)
+            // Parse the date to check if it's valid
+            const dueDate = columns[0];
+            if (!Date.parse(dueDate)) continue; // Skip if not a valid date
+            
+            // Add the row data to the collection
+            allRows.push([columns[0], columns[1], \`[[\${page.path}|\${page.name}]]\`]);
+          }
+        }
+      }
+    }
+  }
+
+  // Function to remove duplicate rows based on the first two columns
+  const deduplicateFirstTwoColumns = (rows) => {
+    const seen = new Set();
+    return rows.filter(row => {
+      const key = JSON.stringify([row[0], row[1]]); // Combine first two columns as a key
+      if (seen.has(key)) {
+        return false;
+      }
+      seen.add(key);
+      return true;
+    });
+  };
+  
+  // Remove duplicates based on first two columns
+  const allUniqueRows = deduplicateFirstTwoColumns(allRows);
+
+  // Sort rows by date (parse the date string for comparison)
+  const sortedRows = allUniqueRows.sort((a, b) => new Date(a[0]) - new Date(b[0]));
+
+  // Create the table with the collected data
+  const table = dv.markdownTable(
+    ["Due Date", "Task Description", "File"], 
+    sortedRows
+  );
+
+  return table;
+}
+
+processDueDates(dv,'#<% courseId %>');
+\`\`\``;
+    }
   }
 
   generateCourseIndexTemplate(): string {
