@@ -8,10 +8,8 @@ module.exports = {
     "!esbuild.config.mjs",
     "!version-bump.mjs"
   ],
-  moduleNameMapper: {
-    "^obsidian$": "./__mocks__/obsidian.js"
-  },
   transform: {
     "^.+\\.ts$": "babel-jest"
-  }
+  },
+  setupFilesAfterEnv: ["<rootDir>/jest.setup.js"]
 }
