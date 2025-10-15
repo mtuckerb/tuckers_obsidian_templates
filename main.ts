@@ -9,6 +9,7 @@ import { CourseCreationWizard } from "./courseWizard"
 import { VocabularyExtractor } from "./vocabulary"
 import { DueDatesParser } from "./dueDates"
 import { DailyNotesIntegration } from "./dailyNotes"
+import { AssignmentsModal } from "./assignmentsModal"
 
 export default class TuckersToolsPlugin extends Plugin {
   settings: TuckersToolsSettings
@@ -59,6 +60,63 @@ export default class TuckersToolsPlugin extends Plugin {
       name: "Create New Course",
       callback: () => {
         this.courseWizard.createCourseHomepage()
+      }
+    })
+
+    this.addCommand({
+      id: "create-multiple-assignments",
+      name: "Create Multiple Assignments for Course",
+      callback: async () => {
+        // Get the current course context or prompt for it
+        const currentFile = this.app.workspace.getActiveFile();
+        let courseId = "";
+        let courseName = "";
+
+        // Try to determine the course from the current file
+        if (currentFile) {
+          const cache = this.app.metadataCache.getFileCache(currentFile);
+          if (cache && cache.frontmatter) {
+            courseId = cache.frontmatter.course_id || "";
+            courseName = cache.frontmatter.course_name || cache.frontmatter.title || currentFile.basename;
+          }
+        }
+
+        // If we couldn't determine the course, prompt for it
+        if (!courseId) {
+          const promptedCourseId = await this.promptForCourseId("Enter course ID for assignments");
+          if (!promptedCourseId) return;
+          courseId = promptedCourseId;
+          courseName = courseId; // Fallback if we don't have a better name
+        }
+
+        // Show the assignments modal
+        new AssignmentsModal(
+          this.app,
+          courseName,
+          courseId,
+          async (assignments, courseName, courseId) => {
+            // Process the assignments - for now, we'll create individual assignment files
+            for (const assignment of assignments) {
+              if (assignment.name.trim() === "") continue; // Skip empty assignments
+
+              // Create an assignment file
+              const assignmentContent = this.generateAssignmentFileContent(
+                assignment,
+                courseName,
+                courseId
+              );
+              const fileName = `${courseId} - ${assignment.name.replace(/[<>:"/\\|?*]/g, "_")}.md`;
+              const filePath = `${courseId}/${fileName}`;
+
+              try {
+                await this.app.vault.create(filePath, assignmentContent);
+                console.log(`Created assignment file: ${filePath}`);
+              } catch (error) {
+                console.error(`Error creating assignment file ${filePath}:`, error);
+              }
+            }
+          }
+        ).open();
       }
     })
 
@@ -115,6 +173,48 @@ export default class TuckersToolsPlugin extends Plugin {
       message + "\n\nExample: 2025-01-15 or leave empty for today"
     )
     return date ? date.trim() : null
+  }
+
+  generateAssignmentFileContent(assignment: any, courseName: string, courseId: string): string {
+    // Create the assignment file content using the assignment template structure
+    return `---
+course_id: ${courseId}
+assignment_type: ${assignment.type || "Assignment"}
+due_date: ${assignment.dueDate}
+points: ${assignment.points || ""}
+content_type: assignment
+created: ${new Date().toISOString()}
+status: pending
+tags:
+  - education
+  - ${courseId}
+  - assignment
+---
+
+# ${assignment.name} - ${courseId}
+
+## Description
+${assignment.description}
+
+## Instructions
+
+
+## Due Date
+**Assigned**: ${new Date().toISOString().split('T')[0]}
+**Due**: ${assignment.dueDate}
+
+## Submission
+
+
+## Grading Criteria
+
+
+## Resources
+
+
+# Due Dates
+| ${assignment.dueDate} | ${assignment.name} | pending |
+`;
   }
 
   onunload() {

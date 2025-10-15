@@ -10,6 +10,7 @@ export interface TuckersToolsSettings {
   schoolAbbreviation: string;
   templateFolder: string;
   useEnhancedMetadata: boolean;
+  dataviewJsPath: string;
 }
 
 export const DEFAULT_SETTINGS: TuckersToolsSettings = {
@@ -19,7 +20,8 @@ export const DEFAULT_SETTINGS: TuckersToolsSettings = {
   schoolName: 'University',
   schoolAbbreviation: 'U',
   templateFolder: 'Tuckers Tools',
-  useEnhancedMetadata: false
+  useEnhancedMetadata: false,
+  dataviewJsPath: '/Supporting/dataview-functions'
 }
 
 export class TuckersToolsSettingTab extends PluginSettingTab {
@@ -120,6 +122,17 @@ export class TuckersToolsSettingTab extends PluginSettingTab {
         .setValue(this.plugin.settings.useEnhancedMetadata)
         .onChange(async (value) => {
           this.plugin.settings.useEnhancedMetadata = value;
+          await this.plugin.saveSettings();
+        }));
+
+    new Setting(containerEl)
+      .setName('Dataview Functions Path')
+      .setDesc('Path to the dataview functions file (without extension)')
+      .addText(text => text
+        .setPlaceholder('/Supporting/dataview-functions')
+        .setValue(this.plugin.settings.dataviewJsPath)
+        .onChange(async (value) => {
+          this.plugin.settings.dataviewJsPath = value;
           await this.plugin.saveSettings();
         }));
   }

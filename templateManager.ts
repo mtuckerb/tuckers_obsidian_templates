@@ -446,80 +446,13 @@ return engine.markdown.create(str)
 
 ## Vocabulary
 \`\`\`dataviewjs
-const {processCourseVocabulary} = require("/Supporting/dataview-functions");
+const {processCourseVocabulary} = require("${this.settings.dataviewJsPath || "/Supporting/dataview-functions"}");
 processCourseVocabulary(dv, '<% courseId %>');
 \`\`\`
 
 ## Due Dates
 \`\`\`dataviewjs
-function processDueDates(dv, tag) {
-  // Find all pages with the specified tag
-  const pages = dv.pages(tag).file;
-
-  // Array to store all rows
-  const allRows = [];
-
-  // For each page, extract the "Due Dates" section
-  for (const page of pages.values()) {
-    const content = app.vault.cachedRead(app.vault.getAbstractFileByPath(page.path));
-    const regex = /# Due Dates\\s*
-((?:.|
-)*?)(?=
-#|\\\$)/;
-    const match = content.match(regex);
-    
-    if (match && match[1]) {
-      const tableContent = match[1];
-      // Split content into lines and process table rows
-      const lines = tableContent.split('
-');
-      
-      for (const line of lines) {
-        // Check if the line looks like a table row (contains | characters)
-        if (line.includes('|')) {
-          const columns = line.split('|').map(col => col.trim()).filter(col => col !== '');
-          
-          if (columns.length >= 2) { // Ensure there are at least 2 columns (due date, task)
-            // Parse the date to check if it's valid
-            const dueDate = columns[0];
-            if (!Date.parse(dueDate)) continue; // Skip if not a valid date
-            
-            // Add the row data to the collection
-            allRows.push([columns[0], columns[1], \`[[\${page.path}|\${page.name}]]\`]);
-          }
-        }
-      }
-    }
-  }
-
-  // Function to remove duplicate rows based on the first two columns
-  const deduplicateFirstTwoColumns = (rows) => {
-    const seen = new Set();
-    return rows.filter(row => {
-      const key = JSON.stringify([row[0], row[1]]); // Combine first two columns as a key
-      if (seen.has(key)) {
-        return false;
-      }
-      seen.add(key);
-      return true;
-    });
-  };
-  
-  // Remove duplicates based on first two columns
-  const allUniqueRows = deduplicateFirstTwoColumns(allRows);
-
-  // Sort rows by date (parse the date string for comparison)
-  const sortedRows = allUniqueRows.sort((a, b) => new Date(a[0]) - new Date(b[0]));
-
-  // Create the table with the collected data
-  const table = dv.markdownTable(
-    ["Due Date", "Task Description", "File"], 
-    sortedRows
-  );
-
-  return table;
-}
-
+const {processDueDates} = require("${this.settings.dataviewJsPath || "/Supporting/dataview-functions"}");
 processDueDates(dv,'#<% courseId %>');
 \`\`\`
 
@@ -617,80 +550,13 @@ return engine.markdown.create(str)
 
 ## Vocabulary
 \`\`\`dataviewjs
-const {processCourseVocabulary} = require("/Supporting/dataview-functions");
+const {processCourseVocabulary} = require("${this.settings.dataviewJsPath || "/Supporting/dataview-functions"}");
 processCourseVocabulary(dv, '<% courseId %>');
 \`\`\`
 
 ## Due Dates
 \`\`\`dataviewjs
-function processDueDates(dv, tag) {
-  // Find all pages with the specified tag
-  const pages = dv.pages(tag).file;
-
-  // Array to store all rows
-  const allRows = [];
-
-  // For each page, extract the "Due Dates" section
-  for (const page of pages.values()) {
-    const content = app.vault.cachedRead(app.vault.getAbstractFileByPath(page.path));
-    const regex = /# Due Dates\\s*
-((?:.|
-)*?)(?=
-#|\\\$)/;
-    const match = content.match(regex);
-    
-    if (match && match[1]) {
-      const tableContent = match[1];
-      // Split content into lines and process table rows
-      const lines = tableContent.split('
-');
-      
-      for (const line of lines) {
-        // Check if the line looks like a table row (contains | characters)
-        if (line.includes('|')) {
-          const columns = line.split('|').map(col => col.trim()).filter(col => col !== '');
-          
-          if (columns.length >= 2) { // Ensure there are at least 2 columns (due date, task)
-            // Parse the date to check if it's valid
-            const dueDate = columns[0];
-            if (!Date.parse(dueDate)) continue; // Skip if not a valid date
-            
-            // Add the row data to the collection
-            allRows.push([columns[0], columns[1], \`[[\${page.path}|\${page.name}]]\`]);
-          }
-        }
-      }
-    }
-  }
-
-  // Function to remove duplicate rows based on the first two columns
-  const deduplicateFirstTwoColumns = (rows) => {
-    const seen = new Set();
-    return rows.filter(row => {
-      const key = JSON.stringify([row[0], row[1]]); // Combine first two columns as a key
-      if (seen.has(key)) {
-        return false;
-      }
-      seen.add(key);
-      return true;
-    });
-  };
-  
-  // Remove duplicates based on first two columns
-  const allUniqueRows = deduplicateFirstTwoColumns(allRows);
-
-  // Sort rows by date (parse the date string for comparison)
-  const sortedRows = allUniqueRows.sort((a, b) => new Date(a[0]) - new Date(b[0]));
-
-  // Create the table with the collected data
-  const table = dv.markdownTable(
-    ["Due Date", "Task Description", "File"], 
-    sortedRows
-  );
-
-  return table;
-}
-
+const {processDueDates} = require("${this.settings.dataviewJsPath || "/Supporting/dataview-functions"}");
 processDueDates(dv,'#<% courseId %>');
 \`\`\``;
     }
@@ -750,6 +616,18 @@ else if (weekNumber) { title = \`W\${weekNumber}\`}
 
 # [[<% course %>]] - <% title %> - <% dayOfWeek %>
 
+## Due Dates
+| Date | Assignment |
+| ---- | ---------- |
+|      |            |
+|      |            |
+|      |            |
+
+\`\`\`dataviewjs
+const {processDueDates} = require("${this.settings.dataviewJsPath || "/Supporting/dataview-functions"}");
+processDueDates(dv,'#<% courseId %>');
+\`\`\`
+
 ## Learning Objectives
 
 ## Reading Assignment
@@ -758,12 +636,12 @@ else if (weekNumber) { title = \`W\${weekNumber}\`}
 
 ## Discussion Questions
 
-## Assignments
-| Date | Assignment | Status |
-| ---- | ---------- | ------ |
-|      |            |        |
-
 ## Vocabulary
+
+\`\`\`dataviewjs
+const {processCourseVocabulary} = require("${this.settings.dataviewJsPath || "/Supporting/dataview-functions"}");
+processCourseVocabulary(dv, '<% courseId %>');
+\`\`\`
 
 ## Additional Resources`
   }
@@ -792,6 +670,11 @@ const { chapterNumber, course, courseId, discipline, text} = await tp.user.new_c
 %>
 
 # [[<% text %>]] - Chapter <% chapterNumber %>
+
+## Reading Assignment
+- **Textbook**: [[<% text %>]]
+- **Chapter**: <% chapterNumber %>
+- **Pages**: 
 
 ## Summary
 
@@ -843,7 +726,11 @@ tags:
 
 ## Grading Criteria
 
-## Resources`
+## Resources
+
+# Due Dates
+| <% dueDate %> | <% assignmentName %> | pending |
+`
   }
 
   generateDailyNoteTemplate(): string {
