@@ -446,7 +446,7 @@ return engine.markdown.create(str)
 
 ## Vocabulary
 \`\`\`dataviewjs
-const {processCourseVocabulary} = require("/Supporting/dataview-functions");
+const {processCourseVocabulary} = require("${this.settings.dataviewJsPath || "/Supporting/dataview-functions"}");
 processCourseVocabulary(dv, '<% courseId %>');
 \`\`\`
 
@@ -617,7 +617,7 @@ return engine.markdown.create(str)
 
 ## Vocabulary
 \`\`\`dataviewjs
-const {processCourseVocabulary} = require("/Supporting/dataview-functions");
+const {processCourseVocabulary} = require("${this.settings.dataviewJsPath || "/Supporting/dataview-functions"}");
 processCourseVocabulary(dv, '<% courseId %>');
 \`\`\`
 
