@@ -413,16 +413,16 @@ try {
 **School**: ${this.settings.schoolName}
 
 ## Instructor
-**Name**: \`INPUT[text(instructor_name)]\`
-**Email**: \`INPUT[text(instructor_email)]\`
-**Office Hours**: \`INPUT[text(instructor_office_hours)]\`
-**Office Location**: \`INPUT[text(instructor_office_location)]\`
+**Name**: \`INPUT[text:instructor_name]\`
+**Email**: \`INPUT[text:instructor_email]\`
+**Office Hours**: \`INPUT[text:instructor_office_hours]\`
+**Office Location**: \`INPUT[text:instructor_office_location]\`
 
 ## Course Description
-\`INPUT[multiline(10x50)(course_description)]\`
+\`INPUT[multiline(10x50):course_description]\`
 
 ## Learning Objectives
-\`INPUT[multiline(10x50)(learning_objectives)]\`
+\`INPUT[multiline(10x50):learning_objectives]\`
 
 ## Required Texts
 \`\`\`meta-bind-js-view
@@ -436,13 +436,13 @@ return engine.markdown.create(str)
 \`\`\`
 
 ## Course Schedule
-\`INPUT[multiline(20x50)(course_schedule)]\`
+\`INPUT[multiline(20x50):course_schedule]\`
 
 ## Assignments
-\`INPUT[multiline(15x50)(assignments)]\`
+\`INPUT[multiline(15x50):assignments]\`
 
 ## Resources
-\`INPUT[multiline(10x50)(resources)]\`
+\`INPUT[multiline(10x50):resources]\`
 
 ## Vocabulary
 \`\`\`dataviewjs
@@ -457,10 +457,10 @@ processDueDates(dv,'#<% courseId %>');
 \`\`\`
 
 ## Class Materials
-\`INPUT[multiline(10x50)(class_materials)]\`
+\`INPUT[multiline(10x50):class_materials]\`
 
 ## Classmates
-\`INPUT[multiline(15x50)(classmates)]\``;
+\`INPUT[multiline(15x50):classmates]\``;
     } else {
       return `---
 course_id: <% courseId %>
@@ -517,16 +517,16 @@ try {
 **School**: ${this.settings.schoolName}
 
 ## Instructor
-**Name**: \`INPUT[text(instructor_name)]\`
-**Email**: \`INPUT[text(instructor_email)]\`
-**Office Hours**: \`INPUT[text(instructor_office_hours)]\`
-**Office Location**: \`INPUT[text(instructor_office_location)]\`
+**Name**: \`INPUT[text:instructor_name]\`
+**Email**: \`INPUT[text:instructor_email]\`
+**Office Hours**: \`INPUT[text:instructor_office_hours]\`
+**Office Location**: \`INPUT[text:instructor_office_location]\`
 
 ## Course Description
-\`INPUT[multiline(10x50)(course_description)]\`
+\`INPUT[multiline(10x50):course_description]\`
 
 ## Learning Objectives
-\`INPUT[multiline(10x50)(learning_objectives)]\`
+\`INPUT[multiline(10x50):learning_objectives]\`
 
 ## Required Texts
 \`\`\`meta-bind-js-view
@@ -540,13 +540,13 @@ return engine.markdown.create(str)
 \`\`\`
 
 ## Schedule
-\`INPUT[multiline(15x50)(course_schedule)]\`
+\`INPUT[multiline(15x50):course_schedule]\`
 
 ## Assignments
-\`INPUT[multiline(10x50)(assignments)]\`
+\`INPUT[multiline(10x50):assignments]\`
 
 ## Resources
-\`INPUT[multiline(10x50)(resources)]\`
+\`INPUT[multiline(10x50):resources]\`
 
 ## Vocabulary
 \`\`\`dataviewjs
