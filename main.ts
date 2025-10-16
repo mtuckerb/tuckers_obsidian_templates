@@ -285,9 +285,22 @@ ${assignment.description}
         const tempWeekNumber = await tp.system.prompt("Week Number (optional)", "");
         weekNumber = tempWeekNumber ? tempWeekNumber : null;
         
+        // Look for files with course_home tag or contentType: Course instead of hardcoded path
+        const courseFiles = app.vault.getMarkdownFiles().filter((f: any) => {
+          const cache = app.metadataCache.getFileCache(f);
+          return cache && (
+            (cache.tags && cache.tags.some((tag: any) => tag.tag === "#course_home")) ||
+            (cache.frontmatter && cache.frontmatter.contentType === "Course") ||
+            (cache.frontmatter && cache.frontmatter.tags && 
+             (Array.isArray(cache.frontmatter.tags) 
+               ? cache.frontmatter.tags.includes("course_home")
+               : cache.frontmatter.tags === "course_home"))
+          );
+        });
+        
         course = await tp.system.suggester(
-          () => app.vault.getMarkdownFiles().filter((f: any) => f.path.includes("Courses")).map((f: any) => f.basename),
-          app.vault.getMarkdownFiles().filter((f: any) => f.path.includes("Courses"))
+          () => courseFiles.map((f: any) => f.basename),
+          courseFiles
         );
         
         dayOfWeek = await tp.system.suggester(
@@ -336,9 +349,22 @@ ${assignment.description}
     try {
       if (tp && tp.system && tp.system.prompt) {
         chapterNumber = await tp.system.prompt("Chapter Number", "") || "";
+        // Look for files with course_home tag or contentType: Course instead of hardcoded path
+        const courseFiles = tp.app.vault.getMarkdownFiles().filter((f: any) => {
+          const cache = tp.app.metadataCache.getFileCache(f);
+          return cache && (
+            (cache.tags && cache.tags.some((tag: any) => tag.tag === "#course_home")) ||
+            (cache.frontmatter && cache.frontmatter.contentType === "Course") ||
+            (cache.frontmatter && cache.frontmatter.tags && 
+             (Array.isArray(cache.frontmatter.tags) 
+               ? cache.frontmatter.tags.includes("course_home")
+               : cache.frontmatter.tags === "course_home"))
+          );
+        });
+        
         course = await tp.system.suggester(
-          () => tp.app.vault.getMarkdownFiles().filter((f: any) => f.path.includes("Courses")).map((f: any) => f.basename),
-          tp.app.vault.getMarkdownFiles().filter((f: any) => f.path.includes("Courses"))
+          () => courseFiles.map((f: any) => f.basename),
+          courseFiles
         );
         const textOptions = tp.app.vault.getFiles().filter((f: any) => f.extension === "pdf").map((f: any) => f.basename);
         text = await tp.system.suggester(textOptions, textOptions, "Textbook");

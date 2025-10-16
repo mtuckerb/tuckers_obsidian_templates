@@ -391,6 +391,7 @@ course_id: <% courseId %>
 course_season: <% courseSeason %>
 course_year: <% courseYear %>
 created: <% tp.date.now("YYYY-MM-DD[T]HH:mm:ssZ") %>
+contentType: Course
 tags: 
   - <% courseId %>
   - ${this.settings.schoolAbbreviation}/<% courseYear %>/<% courseSeason %>/<% courseId %>/
