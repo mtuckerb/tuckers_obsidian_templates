@@ -353,7 +353,7 @@ export class TemplateManager {
     const enhancedMetadata = this.settings.useEnhancedMetadata;
     
     if (enhancedMetadata) {
-      let template = ` <%*
+      let template = `<%*
 // Tuckers Tools Course Creation
 // For best experience, use the plugin command: Command Palette → 'Create New Course'
 
