@@ -247,27 +247,43 @@ ${assignment.description}
   }
 
   async newModuleFunction(app: any, tp: any, year: string) {
-    // Prompt user for module details
+    // Prompt user for module details in the correct order
     let moduleNumber: string | null = "";
     let weekNumber: string | null = "";
     let course = "";
     let courseId = "";
     let discipline = "GEN";
     let dayOfWeek = "";
+    let season = "";
 
     try {
       // Attempt prompts with fallback
       if (tp && tp.system && tp.system.prompt) {
-        const tempModuleNumber = await tp.system.prompt("Module Number (optional)", "");
-        moduleNumber = tempModuleNumber ? tempModuleNumber : null;
+        // First, ask for the course (filtered by current semester)
+        // Get current date for filtering
+        const currentDate = new Date();
+        const currentYear = currentDate.getFullYear().toString();
+        const currentMonth = currentDate.getMonth(); // 0-11
+        let currentSemester = "Fall";
         
-        const tempWeekNumber = await tp.system.prompt("Week Number (optional)", "");
-        weekNumber = tempWeekNumber ? tempWeekNumber : null;
+        // Determine current semester based on month
+        if (currentMonth >= 0 && currentMonth <= 4) {
+          currentSemester = "Spring";
+        } else if (currentMonth >= 5 && currentMonth <= 7) {
+          currentSemester = "Summer";
+        } else {
+          currentSemester = "Fall";
+        }
         
-        // Look for files with course_home tag or contentType: Course instead of hardcoded path
+        console.log(`Filtering courses for ${currentSemester} ${currentYear}`);
+
+        // Look for course files from the current semester only
         const courseFiles = app.vault.getMarkdownFiles().filter((f: any) => {
           const cache = app.metadataCache.getFileCache(f);
-          return cache && (
+          if (!cache) return false;
+          
+          // Check if it's a course file
+          const isCourseFile = cache && (
             (cache.tags && cache.tags.some((tag: any) => tag.tag === "#course_home")) ||
             (cache.frontmatter && cache.frontmatter.contentType === "Course") ||
             (cache.frontmatter && cache.frontmatter.tags && 
@@ -275,24 +291,74 @@ ${assignment.description}
                ? cache.frontmatter.tags.includes("course_home")
                : cache.frontmatter.tags === "course_home"))
           );
+          
+          if (!isCourseFile) return false;
+          
+          // Check if it's from the current semester
+          const isCurrentSemester = cache && (
+            (cache.frontmatter && cache.frontmatter.course_year === currentYear && cache.frontmatter.course_season === currentSemester) ||
+            (cache.frontmatter && cache.frontmatter.course_year === currentYear && cache.frontmatter.course_season === currentSemester)
+          );
+          
+          // If we can't determine semester, include it (fallback)
+          if (!cache.frontmatter || (!cache.frontmatter.course_year && !cache.frontmatter.course_season)) {
+            return isCourseFile; // Include course files even if we can't filter by semester
+          }
+          
+          return isCourseFile && isCurrentSemester;
         });
         
-        course = await tp.system.suggester(
-          () => courseFiles.map((f: any) => f.basename),
-          courseFiles
-        );
+        console.log(`Found ${courseFiles.length} course files for ${currentSemester} ${currentYear}`);
+
+        if (courseFiles.length === 0) {
+          // If no courses found for current semester, show all courses
+          console.log("No courses found for current semester, showing all courses");
+          const allCourseFiles = app.vault.getMarkdownFiles().filter((f: any) => {
+            const cache = app.metadataCache.getFileCache(f);
+            return cache && (
+              (cache.tags && cache.tags.some((tag: any) => tag.tag === "#course_home")) ||
+              (cache.frontmatter && cache.frontmatter.contentType === "Course") ||
+              (cache.frontmatter && cache.frontmatter.tags && 
+               (Array.isArray(cache.frontmatter.tags) 
+                 ? cache.frontmatter.tags.includes("course_home")
+                 : cache.frontmatter.tags === "course_home"))
+            );
+          });
+          course = await tp.system.suggester(
+            () => allCourseFiles.map((f: any) => f.basename),
+            allCourseFiles,
+            "Select Course (All Semesters)"
+          );
+        } else {
+          course = await tp.system.suggester(
+            () => courseFiles.map((f: any) => f.basename),
+            courseFiles,
+            `Select Course (${currentSemester} ${currentYear})`
+          );
+        }
+
+        // Now ask for module details
+        const tempModuleNumber = await tp.system.prompt("Module Number (optional)", "");
+        moduleNumber = tempModuleNumber ? tempModuleNumber : null;
+        
+        const tempWeekNumber = await tp.system.prompt("Week Number (optional)", "");
+        weekNumber = tempWeekNumber ? tempWeekNumber : null;
         
         dayOfWeek = await tp.system.suggester(
           ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
           ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
           "Day of Week"
         );
+        
+        // Set season to current semester
+        season = currentSemester;
       } else {
         // Fallback values
         moduleNumber = null;
         weekNumber = null;
         course = "New Course";
         dayOfWeek = "Monday";
+        season = "Fall"; // Default fallback
       }
     } catch (e) {
       console.error("Error in new_module prompts:", e);
@@ -301,6 +367,7 @@ ${assignment.description}
       weekNumber = null;
       course = "New Course";
       dayOfWeek = "Monday";
+      season = "Fall";
     }
 
     // Calculate derived values
@@ -308,9 +375,9 @@ ${assignment.description}
     discipline = course ? (course.split(" - ")[0]?.substring(0, 3) || "GEN") : "GEN";
 
     return {
-      season: "Fall", // This would normally be dynamically determined
-      moduleNumber: moduleNumber,
-      weekNumber: weekNumber,
+      season,
+      moduleNumber,
+      weekNumber,
       course,
       courseId,
       discipline,
