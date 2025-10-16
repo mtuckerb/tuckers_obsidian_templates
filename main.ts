@@ -220,50 +220,30 @@ ${assignment.description}
   }
 
   async initializeTemplaterFunctions() {
-    // Check if Templater plugin is available
-    const templaterPlugin = (this.app as any).plugins.getPlugin("templater-obsidian");
-    if (!templaterPlugin) {
-      console.log("Templater plugin not found. Course templates will not work properly.");
-      return;
-    }
-
-    // Register user functions with Templater
-    try {
-      // Try to add functions via different methods depending on the Templater version
-      if (templaterPlugin && templaterPlugin.templater) {
-        // Create a user function manager object if it doesn't exist
-        if (!templaterPlugin.templater.functions) {
-          templaterPlugin.templater.functions = {};
+    // Register our custom templater functions in the global namespace
+      // This approach survives template execution unlike direct function registration
+      try {
+        // Create our global namespace under app.globals to store our functions
+        if (!(this.app as any).globals) {
+          (this.app as any).globals = {};
         }
-
-        // Add our custom functions to the templater functions object
-        templaterPlugin.templater.functions["new_module"] = async (app: any, tp: any, year: any) => {
+        if (!(this.app as any).globals.tuckersTools) {
+          (this.app as any).globals.tuckersTools = {};
+        }
+        
+        // Register our functions in the global namespace
+        (this.app as any).globals.tuckersTools.new_module = async (app: any, tp: any, year: any) => {
           return this.newModuleFunction(app, tp, year);
         };
-
-        templaterPlugin.templater.functions["new_chapter"] = async (tp: any) => {
+        
+        (this.app as any).globals.tuckersTools.new_chapter = async (tp: any) => {
           return this.newChapterFunction(tp);
         };
         
-        // Register functions in the tp.user namespace
-        // Templater will make these available as tp.user.function_name
-        if (!templaterPlugin.templater.functions.user) {
-          templaterPlugin.templater.functions.user = {};
-        }
-        templaterPlugin.templater.functions.user["new_module"] = async (app: any, tp: any, year: any) => {
-          return this.newModuleFunction(app, tp, year);
-        };
-        templaterPlugin.templater.functions.user["new_chapter"] = async (tp: any) => {
-          return this.newChapterFunction(tp);
-        };
-
-        console.log("Tuckers Tools templater functions registered successfully");
-      } else {
-        console.error("Could not register templater functions - templater object not found");
+        console.log("Tuckers Tools global functions registered successfully");
+      } catch (e) {
+        console.error("Error registering Tuckers Tools global functions:", e);
       }
-    } catch (e) {
-      console.error("Error registering templater functions:", e);
-    }
   }
 
   async newModuleFunction(app: any, tp: any, year: string) {

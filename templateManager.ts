@@ -586,7 +586,7 @@ tags:
 
   generateModuleTemplate(): string {
     return `<%*
-const { season, moduleNumber, weekNumber, course, courseId, discipline, dayOfWeek } = await tp.user.new_module(app, tp, "2025");
+const { season, moduleNumber, weekNumber, course, courseId, discipline, dayOfWeek } = await tp.app.globals.tuckersTools.new_module(app, tp, "2025");
 let title = courseId
 if (moduleNumber && weekNumber) { title = \`M\${moduleNumber}/W\${weekNumber}\`}
 else if (moduleNumber) { title = \`M\${moduleNumber}\` } 
@@ -647,7 +647,7 @@ processCourseVocabulary(dv, '<% courseId %>');
 
   generateChapterTemplate(): string {
     return `<%*
-const { chapterNumber, course, courseId, discipline, text} = await tp.user.new_chapter(tp);
+const { chapterNumber, course, courseId, discipline, text} = await tp.app.globals.tuckersTools.new_chapter(tp);
 %>---
 ${
   this.settings.useEnhancedMetadata
