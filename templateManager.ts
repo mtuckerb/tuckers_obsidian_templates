@@ -419,10 +419,10 @@ try {
 **Office Location**: \`INPUT[text:instructor_office_location]\`
 
 ## Course Description
-\`INPUT[textarea:course_description]\`
+\`INPUT[textArea:course_description]\`
 
 ## Learning Objectives
-\`INPUT[textarea:learning_objectives]\`
+\`INPUT[textArea:learning_objectives]\`
 
 ## Required Texts
 \`\`\`meta-bind-js-view
@@ -436,13 +436,13 @@ return engine.markdown.create(str)
 \`\`\`
 
 ## Course Schedule
-\`INPUT[textarea:course_schedule]\`
+\`INPUT[textArea:course_schedule]\`
 
 ## Assignments
-\`INPUT[textarea:assignments]\`
+\`INPUT[textArea:assignments]\`
 
 ## Resources
-\`INPUT[textarea:resources]\`
+\`INPUT[textArea:resources]\`
 
 ## Vocabulary
 \`\`\`dataviewjs
@@ -457,10 +457,10 @@ processDueDates(dv,'#<% courseId %>');
 \`\`\`
 
 ## Class Materials
-\`INPUT[textarea:class_materials]\`
+\`INPUT[textArea:class_materials]\`
 
 ## Classmates
-\`INPUT[textarea:classmates]\``;
+\`INPUT[textArea:classmates]\``;
     } else {
       return `---
 course_id: <% courseId %>
@@ -523,10 +523,10 @@ try {
 **Office Location**: \`INPUT[text:instructor_office_location]\`
 
 ## Course Description
-\`INPUT[textarea:course_description]\`
+\`INPUT[textArea:course_description]\`
 
 ## Learning Objectives
-\`INPUT[textarea:learning_objectives]\`
+\`INPUT[textArea:learning_objectives]\`
 
 ## Required Texts
 \`\`\`meta-bind-js-view
@@ -540,13 +540,13 @@ return engine.markdown.create(str)
 \`\`\`
 
 ## Schedule
-\`INPUT[textarea:course_schedule]\`
+\`INPUT[textArea:course_schedule]\`
 
 ## Assignments
-\`INPUT[textarea:assignments]\`
+\`INPUT[textArea:assignments]\`
 
 ## Resources
-\`INPUT[textarea:resources]\`
+\`INPUT[textArea:resources]\`
 
 ## Vocabulary
 \`\`\`dataviewjs
