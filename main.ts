@@ -365,8 +365,8 @@ ${assignment.description}
     }
 
     // Calculate derived values
-    courseId = course ? course.split(" - ")[0] || course : "";
-    discipline = course ? (course.split(" - ")[0]?.substring(0, 3) || "GEN") : "GEN";
+    courseId = Array.isArray(course) ? course.split(" - ")[0] || course : "";
+    discipline = Array.isArray(course) ? (course.split(" - ")[0]?.substring(0, 3) || "GEN") : "GEN";
 
     return {
       season,
