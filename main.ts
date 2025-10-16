@@ -11,6 +11,8 @@ import { DueDatesParser } from "./dueDates"
 import { DailyNotesIntegration } from "./dailyNotes"
 import { AssignmentsModal } from "./assignmentsModal"
 
+import { processCourseVocabulary, processDueDates } from "./Supporting/dataview-functions";
+
 export default class TuckersToolsPlugin extends Plugin {
   settings: TuckersToolsSettings
   templateManager: TemplateManager
@@ -18,6 +20,7 @@ export default class TuckersToolsPlugin extends Plugin {
   vocabularyExtractor: VocabularyExtractor
   dueDatesParser: DueDatesParser
   dailyNotesIntegration: DailyNotesIntegration
+  dataviewFunctions: any;
 
   async onload() {
     console.log("Loading Tuckers Tools plugin")
@@ -31,6 +34,7 @@ export default class TuckersToolsPlugin extends Plugin {
     this.vocabularyExtractor = new VocabularyExtractor(this.app)
     this.dueDatesParser = new DueDatesParser(this.app)
     this.dailyNotesIntegration = new DailyNotesIntegration(this.app)
+    this.dataviewFunctions = { processCourseVocabulary, processDueDates };
 
     // Add settings tab
     this.addSettingTab(new TuckersToolsSettingTab(this.app, this))
