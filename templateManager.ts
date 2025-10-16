@@ -353,7 +353,7 @@ export class TemplateManager {
     const enhancedMetadata = this.settings.useEnhancedMetadata;
     
     if (enhancedMetadata) {
-      return `---
+      let template = `---
 course_id: <% courseId %>
 course_season: <% courseSeason %>
 course_year: <% courseYear %>
@@ -446,13 +446,13 @@ return engine.markdown.create(str)
 
 ## Vocabulary
 \`\`\`dataviewjs
-const {processCourseVocabulary} = require("${this.settings.dataviewJsPath || "/Supporting/dataview-functions"}");
+const {processCourseVocabulary} = app.plugins.getPlugin("tuckers-tools")?.dataviewFunctions || require("${this.settings.dataviewJsPath || "/Supporting/dataview-functions"}");
 processCourseVocabulary(dv, '<% courseId %>');
 \`\`\`
 
 ## Due Dates
 \`\`\`dataviewjs
-const {processDueDates} = require("${this.settings.dataviewJsPath || "/Supporting/dataview-functions"}");
+const {processDueDates} = app.plugins.getPlugin("tuckers-tools")?.dataviewFunctions || require("${this.settings.dataviewJsPath || "/Supporting/dataview-functions"}");
 processDueDates(dv,'#<% courseId %>');
 \`\`\`
 
@@ -461,8 +461,13 @@ processDueDates(dv,'#<% courseId %>');
 
 ## Classmates
 \`INPUT[textArea:classmates]\``;
+      
+      // Remove the assignments section
+      template = template.replace(/## Assignments[\r\n]+`INPUT\[textArea:assignments\]`/g, '');
+      
+      return template;
     } else {
-      return `---
+      let template = `---
 course_id: <% courseId %>
 course_name: <% courseName %>
 course_season: <% courseSeason %>
@@ -550,15 +555,20 @@ return engine.markdown.create(str)
 
 ## Vocabulary
 \`\`\`dataviewjs
-const {processCourseVocabulary} = require("${this.settings.dataviewJsPath || "/Supporting/dataview-functions"}");
+const {processCourseVocabulary} = app.plugins.getPlugin("tuckers-tools")?.dataviewFunctions || require("${this.settings.dataviewJsPath || "/Supporting/dataview-functions"}");
 processCourseVocabulary(dv, '<% courseId %>');
 \`\`\`
 
 ## Due Dates
 \`\`\`dataviewjs
-const {processDueDates} = require("${this.settings.dataviewJsPath || "/Supporting/dataview-functions"}");
+const {processDueDates} = app.plugins.getPlugin("tuckers-tools")?.dataviewFunctions || require("${this.settings.dataviewJsPath || "/Supporting/dataview-functions"}");
 processDueDates(dv,'#<% courseId %>');
 \`\`\``;
+      
+      // Remove the assignments section
+      template = template.replace(/## Assignments[\r\n]+`INPUT\[textArea:assignments\]`/g, '');
+      
+      return template;
     }
   }
 
