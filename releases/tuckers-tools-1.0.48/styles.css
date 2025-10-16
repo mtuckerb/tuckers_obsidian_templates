@@ -1,0 +1,54 @@
+/* Tuckers Tools Plugin Styles */
+
+.tuckers-tools-settings {
+  padding: 1rem;
+}
+
+.tuckers-tools-template-section {
+  margin: 1rem 0;
+  padding: 1rem;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 4px;
+}
+
+.tuckers-tools-template-section h3 {
+  margin-top: 0;
+}
+
+.tuckers-tools-template-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.tuckers-tools-template-item {
+  padding: 0.5rem;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 4px;
+}
+
+.tuckers-tools-template-item h4 {
+  margin: 0 0 0.5rem 0;
+}
+
+.tuckers-tools-status-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Due Date Color Coding */
+.due.one_week {
+  background-color: #ffcccc;
+  padding: 2px 4px;
+  border-radius: 3px;
+  font-weight: bold;
+}
+
+.due.two_weeks {
+  background-color: #fff0cc;
+  padding: 2px 4px;
+  border-radius: 3px;
+  font-weight: bold;
+}

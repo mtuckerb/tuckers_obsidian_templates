@@ -236,12 +236,25 @@ ${assignment.description}
           templaterPlugin.templater.functions = {};
         }
 
-        // Add our custom functions directly to the templater functions object
+        // Add our custom functions to both the templater functions object and tp.user namespace
         templaterPlugin.templater.functions["new_module"] = async (app: any, tp: any, year: any) => {
+          return this.newModuleFunction(app, tp, year);
+        };
+        
+        // Also add to tp.user namespace for direct access
+        if (!templaterPlugin.templater.functions.user) {
+          templaterPlugin.templater.functions.user = {};
+        }
+        templaterPlugin.templater.functions.user["new_module"] = async (app: any, tp: any, year: any) => {
           return this.newModuleFunction(app, tp, year);
         };
 
         templaterPlugin.templater.functions["new_chapter"] = async (tp: any) => {
+          return this.newChapterFunction(tp);
+        };
+        
+        // Also add new_chapter to tp.user namespace
+        templaterPlugin.templater.functions.user["new_chapter"] = async (tp: any) => {
           return this.newChapterFunction(tp);
         };
 
