@@ -59,41 +59,7 @@ export default class TuckersToolsPlugin extends Plugin {
       }
     })
 
-    this.addCommand({
-      id: "create-course",
-      name: "Create New Course",
-      callback: async () => {
-        // Get the templater plugin instance
-        const templaterPlugin: any = (this.app as any).plugins.getPlugin("templater-obsidian");
-        if (!templaterPlugin) {
-          new Notice("Templater plugin is required for course creation. Please install and enable it.");
-          return;
-        }
-
-        // Get the course homepage template from templateManager
-        const templateManager = new TemplateManager(this.app, this.settings);
-        const templateContent = templateManager.generateCourseHomepageTemplate();
-        
-        // Create a temporary file to apply templater
-        const date = new Date();
-        const tempFilename = `New Course ${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}.md`;
-        
-        // Create the temporary file in the root vault
-        await this.app.vault.create(tempFilename, templateContent);
-        
-        // Open the file 
-        const newFile = this.app.vault.getAbstractFileByPath(tempFilename);
-        if (newFile instanceof TFile) {
-          const leaf = this.app.workspace.getLeaf(true);
-          await leaf.openFile(newFile);
-          
-          // Notify user to run templater manually
-          new Notice("Course file created. Please run 'Templater: Replace templates in the current file' to complete setup.");
-        } else {
-          new Notice("Error: Could not create course file");
-        }
-      }
-    })
+    // Course creation is handled by Templater templates - no custom command needed
 
     this.addCommand({
       id: "create-multiple-assignments",
