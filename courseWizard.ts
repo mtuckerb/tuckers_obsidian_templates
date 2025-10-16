@@ -217,8 +217,6 @@ export class CourseCreationWizard {
     courseYear: string
     courseId: string
   }): string {
-    const enhancedMetadata = this.settings.useEnhancedMetadata
-
     // Use the templateManager to get the template content and replace values
     const templateManager = new TemplateManager(this.app, this.settings);
     const templateContent = templateManager.generateCourseHomepageTemplate();
