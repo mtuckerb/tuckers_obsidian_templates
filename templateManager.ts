@@ -353,23 +353,7 @@ export class TemplateManager {
     const enhancedMetadata = this.settings.useEnhancedMetadata;
     
     if (enhancedMetadata) {
-      let template = `---
-course_id: <% courseId %>
-course_season: <% courseSeason %>
-course_year: <% courseYear %>
-created: <% tp.date.now("YYYY-MM-DD[T]HH:mm:ssZ") %>
-tags: 
-  - <% courseId %>
-  - ${this.settings.schoolAbbreviation}/<% courseYear %>/<% courseSeason %>/<% courseId %>/
-  - course_home
-  - education
-  - ${this.settings.schoolName.replace(/\s+/g, '_')}
-banner:
-cssclasses:
-  - whiteboard-course
----
-
-<%*
+      let template = ` <%*
 // Tuckers Tools Course Creation
 // For best experience, use the plugin command: Command Palette → 'Create New Course'
 
@@ -402,7 +386,22 @@ try {
 } catch (e) {
   // Folder might already exist
 }
-%>
+%>---
+course_id: <% courseId %>
+course_season: <% courseSeason %>
+course_year: <% courseYear %>
+created: <% tp.date.now("YYYY-MM-DD[T]HH:mm:ssZ") %>
+tags: 
+  - <% courseId %>
+  - ${this.settings.schoolAbbreviation}/<% courseYear %>/<% courseSeason %>/<% courseId %>/
+  - course_home
+  - education
+  - ${this.settings.schoolName.replace(/\s+/g, '_')}
+banner:
+cssclasses:
+  - whiteboard-course
+---
+
 
 # <% courseName %>
 
@@ -431,15 +430,12 @@ try {
 const availableTexts = app.vault.getFiles().filter(file => file.extension == 'pdf').map(f => f?.name)
 const escapeRegex = /[,\`'()]/g;
 options = availableTexts.map(t => \`option([[\${t.replace(escapeRegex,"\$1")}]], \${t.replace(escapeRegex,"\$1")})\` )
-const str = \\\`INPUT[inlineListSuggester(\${options.join(", ")}):texts]\\\`
+const str = \`\\\`INPUT[inlineListSuggester(\${options.join(", ")}):texts]\\\`\`
 return engine.markdown.create(str)
 \`\`\`
 
 ## Course Schedule
 \`INPUT[textArea:course_schedule]\`
-
-## Assignments
-\`INPUT[textArea:assignments]\`
 
 ## Resources
 \`INPUT[textArea:resources]\`
@@ -462,24 +458,9 @@ processDueDates(dv,'#<% courseId %>');
 ## Classmates
 \`INPUT[textArea:classmates]\``;
       
-      // Remove the assignments section
-      template = template.replace(/## Assignments[\r\n]+`INPUT\[textArea:assignments\]`/g, '');
-      
-      return template;
+         return template;
     } else {
-      let template = `---
-course_id: <% courseId %>
-course_name: <% courseName %>
-course_season: <% courseSeason %>
-course_year: <% courseYear %>
-created: <% tp.date.now("YYYY-MM-DD[T]HH:mm:ssZ") %>
-tags:
-  - <% courseId %>
-  - course_home
-  - education
----
-
-<%*
+      let template = `<%*
 // Tuckers Tools Course Creation
 // For best experience, use the plugin command: Command Palette → 'Create New Course'
 
@@ -512,7 +493,17 @@ try {
 } catch (e) {
   // Folder might already exist
 }
-%>
+%>---
+course_id: <% courseId %>
+course_name: <% courseName %>
+course_season: <% courseSeason %>
+course_year: <% courseYear %>
+created: <% tp.date.now("YYYY-MM-DD[T]HH:mm:ssZ") %>
+tags:
+  - <% courseId %>
+  - course_home
+  - education
+---
 
 # <% courseName %>
 
@@ -540,7 +531,7 @@ try {
 const availableTexts = app.vault.getFiles().filter(file => file.extension == 'pdf').map(f => f?.name)
 const escapeRegex = /[,\`'()]/g;
 options = availableTexts.map(t => \`option([[\${t.replace(escapeRegex,"\$1")}]], \${t.replace(escapeRegex,"\$1")})\` )
-const str = \\\`INPUT[inlineListSuggester(\${options.join(", ")}):texts]\\\`
+const str = \'\\\`INPUT[inlineListSuggester(\${options.join(", ")}):texts]\\\`\'
 return engine.markdown.create(str)
 \`\`\`
 
@@ -565,8 +556,6 @@ const {processDueDates} = app.plugins.getPlugin("tuckers-tools")?.dataviewFuncti
 processDueDates(dv,'#<% courseId %>');
 \`\`\``;
       
-      // Remove the assignments section
-      template = template.replace(/## Assignments[\r\n]+`INPUT\[textArea:assignments\]`/g, '');
       
       return template;
     }
