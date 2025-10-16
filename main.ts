@@ -324,15 +324,21 @@ ${assignment.description}
                  : cache.frontmatter.tags === "course_home"))
             );
           });
-          course = await tp.system.suggester(
-            () => allCourseFiles.map((f: any) => f.basename),
-            allCourseFiles,
-            "Select Course (All Semesters)"
-          );
+          
+          if (allCourseFiles.length > 0) {
+            course = await tp.system.suggester(
+              allCourseFiles.map((f: any) => f.basename), // Display labels
+              allCourseFiles, // Actual values
+              "Select Course (All Semesters)"
+            );
+          } else {
+            // No courses found at all, fall back to prompt
+            course = await tp.system.prompt("Course Name", "New Course");
+          }
         } else {
           course = await tp.system.suggester(
-            () => courseFiles.map((f: any) => f.basename),
-            courseFiles,
+            courseFiles.map((f: any) => f.basename), // Display labels
+            courseFiles, // Actual values
             `Select Course (${currentSemester} ${currentYear})`
           );
         }
@@ -345,8 +351,8 @@ ${assignment.description}
         weekNumber = tempWeekNumber ? tempWeekNumber : null;
         
         dayOfWeek = await tp.system.suggester(
-          ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
-          ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
+          ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"], // Display labels
+          ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"], // Actual values
           "Day of Week"
         );
         
