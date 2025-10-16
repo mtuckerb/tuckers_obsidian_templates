@@ -531,7 +531,7 @@ tags:
 const availableTexts = app.vault.getFiles().filter(file => file.extension == 'pdf').map(f => f?.name)
 const escapeRegex = /[,\`'()]/g;
 options = availableTexts.map(t => \`option([[\${t.replace(escapeRegex,"\$1")}]], \${t.replace(escapeRegex,"\$1")})\` )
-const str = \'\\\`INPUT[inlineListSuggester(\${options.join(", ")}):texts]\\\`\'
+const str = \'\\\`INPUT[inlineListSuggester(\${options.join(", ")}):texts]\\\`\\'
 return engine.markdown.create(str)
 \`\`\`
 
@@ -584,7 +584,13 @@ tags:
   }
 
   generateModuleTemplate(): string {
-    return `---
+    return `<%*
+const { season, moduleNumber, weekNumber, course, courseId, discipline, dayOfWeek } = await tp.user.new_module(app, tp, "2025");
+let title = courseId
+if (moduleNumber && weekNumber) { title = \`M\${moduleNumber}/W\${weekNumber}\`}
+else if (moduleNumber) { title = \`M\${moduleNumber}\` } 
+else if (weekNumber) { title = \`W\${weekNumber}\`}
+%>---
 ${
   this.settings.useEnhancedMetadata
     ? `course_id: <% courseId %>
@@ -605,13 +611,6 @@ tags:
   - module
 ---
 
-<%*
-const { season, moduleNumber, weekNumber, course, courseId, discipline, dayOfWeek } = await tp.user.new_module(app, tp, "2025");
-let title = courseId
-if (moduleNumber && weekNumber) { title = \`M\${moduleNumber}/W\${weekNumber}\`}
-else if (moduleNumber) { title = \`M\${moduleNumber}\` } 
-else if (weekNumber) { title = \`W\${weekNumber}\`}
-%>
 
 # [[<% course %>]] - <% title %> - <% dayOfWeek %>
 
@@ -646,7 +645,9 @@ processCourseVocabulary(dv, '<% courseId %>');
   }
 
   generateChapterTemplate(): string {
-    return `---
+    return `<%*
+const { chapterNumber, course, courseId, discipline, text} = await tp.user.new_chapter(tp);
+%>---
 ${
   this.settings.useEnhancedMetadata
     ? `course_id: <% courseId %>
@@ -664,9 +665,6 @@ tags:
   - chapter
 ---
 
-<%*
-const { chapterNumber, course, courseId, discipline, text} = await tp.user.new_chapter(tp);
-%>
 
 # [[<% text %>]] - Chapter <% chapterNumber %>
 
