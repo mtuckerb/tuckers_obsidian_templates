@@ -276,8 +276,8 @@ ${assignment.description}
         }
         
         console.log(`Filtering courses for ${currentSemester} ${currentYear}`);
-
-        // Look for course files from the current semester only
+        
+        // Look for course files, prioritizing current semester
         const courseFiles = app.vault.getMarkdownFiles().filter((f: any) => {
           const cache = app.metadataCache.getFileCache(f);
           if (!cache) return false;
@@ -292,55 +292,43 @@ ${assignment.description}
                : cache.frontmatter.tags === "course_home"))
           );
           
-          if (!isCourseFile) return false;
-          
-          // Check if it's from the current semester
-          const isCurrentSemester = cache && (
-            (cache.frontmatter && cache.frontmatter.course_year === currentYear && cache.frontmatter.course_season === currentSemester) ||
-            (cache.frontmatter && cache.frontmatter.course_year === currentYear && cache.frontmatter.course_season === currentSemester)
-          );
-          
-          // If we can't determine semester, include it (fallback)
-          if (!cache.frontmatter || (!cache.frontmatter.course_year && !cache.frontmatter.course_season)) {
-            return isCourseFile; // Include course files even if we can't filter by semester
-          }
-          
-          return isCourseFile && isCurrentSemester;
+          return isCourseFile;
         });
+        
+        console.log(`Found ${courseFiles.length} total course files`);
+        
+        // Filter by current semester if possible
+        const currentSemesterFiles = courseFiles.filter((f: any) => {
+          const cache = app.metadataCache.getFileCache(f);
+          if (!cache || !cache.frontmatter) return false;
+          
+          const courseYear = cache.frontmatter.course_year || cache.frontmatter.courseYear || "";
+          const courseSeason = cache.frontmatter.course_season || cache.frontmatter.courseSeason || "";
+          
+          return (courseYear === currentYear && courseSeason === currentSemester);
+        });
+        
+        console.log(`Found ${currentSemesterFiles.length} current semester files`);
         
         console.log(`Found ${courseFiles.length} course files for ${currentSemester} ${currentYear}`);
 
-        if (courseFiles.length === 0) {
-          // If no courses found for current semester, show all courses
-          console.log("No courses found for current semester, showing all courses");
-          const allCourseFiles = app.vault.getMarkdownFiles().filter((f: any) => {
-            const cache = app.metadataCache.getFileCache(f);
-            return cache && (
-              (cache.tags && cache.tags.some((tag: any) => tag.tag === "#course_home")) ||
-              (cache.frontmatter && cache.frontmatter.contentType === "Course") ||
-              (cache.frontmatter && cache.frontmatter.tags && 
-               (Array.isArray(cache.frontmatter.tags) 
-                 ? cache.frontmatter.tags.includes("course_home")
-                 : cache.frontmatter.tags === "course_home"))
-            );
-          });
-          
-          if (allCourseFiles.length > 0) {
-            course = await tp.system.suggester(
-              allCourseFiles.map((f: any) => f.basename), // Display labels
-              allCourseFiles, // Actual values
-              "Select Course (All Semesters)"
-            );
-          } else {
-            // No courses found at all, fall back to prompt
-            course = await tp.system.prompt("Course Name", "New Course");
-          }
-        } else {
+        // Use current semester files if available, otherwise all course files
+        const filesToShow = currentSemesterFiles.length > 0 ? currentSemesterFiles : courseFiles;
+        const promptMessage = currentSemesterFiles.length > 0 
+          ? `Select Course (${currentSemester} ${currentYear})` 
+          : `Select Course (All Semesters - ${courseFiles.length} courses)`;
+        
+        console.log(`Showing ${filesToShow.length} courses with message: ${promptMessage}`);
+        
+        if (filesToShow.length > 0) {
           course = await tp.system.suggester(
-            courseFiles.map((f: any) => f.basename), // Display labels
-            courseFiles, // Actual values
-            `Select Course (${currentSemester} ${currentYear})`
+            filesToShow.map((f: any) => f.basename), // Display labels
+            filesToShow, // Actual values
+            promptMessage
           );
+        } else {
+          // No courses found at all, fall back to prompt
+          course = await tp.system.prompt("Course Name", "New Course");
         }
 
         // Now ask for module details
