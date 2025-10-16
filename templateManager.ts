@@ -430,7 +430,7 @@ try {
 ---
 const availableTexts = app.vault.getFiles().filter(file => file.extension == 'pdf').map(f => f?.name)
 const escapeRegex = /[,\`'()]/g;
-options = availableTexts.map(t => \`option([[\${t.replace(escapeRegex,\$1)}]], \${t.replace(escapeRegex,\$1)})\` )
+options = availableTexts.map(t => \`option([[\${t.replace(escapeRegex,"\$1")}]], \${t.replace(escapeRegex,"\$1")})\` )
 const str = \\\`INPUT[inlineListSuggester(\${options.join(", ")}):texts]\\\`
 return engine.markdown.create(str)
 \`\`\`
@@ -539,7 +539,7 @@ try {
 ---
 const availableTexts = app.vault.getFiles().filter(file => file.extension == 'pdf').map(f => f?.name)
 const escapeRegex = /[,\`'()]/g;
-options = availableTexts.map(t => \`option([[\${t.replace(escapeRegex,\$1)}]], \${t.replace(escapeRegex,\$1)})\` )
+options = availableTexts.map(t => \`option([[\${t.replace(escapeRegex,"\$1")}]], \${t.replace(escapeRegex,"\$1")})\` )
 const str = \\\`INPUT[inlineListSuggester(\${options.join(", ")}):texts]\\\`
 return engine.markdown.create(str)
 \`\`\`
