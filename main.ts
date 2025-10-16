@@ -87,13 +87,8 @@ export default class TuckersToolsPlugin extends Plugin {
           const leaf = this.app.workspace.getLeaf(true);
           await leaf.openFile(newFile);
           
-          // Execute templater on the file to trigger the prompts
-          try {
-            await templaterPlugin.templater.execute_template_on_file(newFile);
-          } catch (error) {
-            console.error("Error executing templater on new course file:", error);
-            new Notice("Error executing templater on new course file. Please run 'Templater: Replace templates in the current file' manually.");
-          }
+          // Notify user to run templater manually
+          new Notice("Course file created. Please run 'Templater: Replace templates in the current file' to complete setup.");
         } else {
           new Notice("Error: Could not create course file");
         }
