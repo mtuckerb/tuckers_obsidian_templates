@@ -236,16 +236,8 @@ ${assignment.description}
           templaterPlugin.templater.functions = {};
         }
 
-        // Add our custom functions to both the templater functions object and tp.user namespace
+        // Add our custom functions to the templater functions object
         templaterPlugin.templater.functions["new_module"] = async (app: any, tp: any, year: any) => {
-          return this.newModuleFunction(app, tp, year);
-        };
-        
-        // Also add to tp.user namespace for direct access
-        if (!templaterPlugin.templater.functions.user) {
-          templaterPlugin.templater.functions.user = {};
-        }
-        templaterPlugin.templater.functions.user["new_module"] = async (app: any, tp: any, year: any) => {
           return this.newModuleFunction(app, tp, year);
         };
 
@@ -253,7 +245,14 @@ ${assignment.description}
           return this.newChapterFunction(tp);
         };
         
-        // Also add new_chapter to tp.user namespace
+        // Register functions in the tp.user namespace
+        // Templater will make these available as tp.user.function_name
+        if (!templaterPlugin.templater.functions.user) {
+          templaterPlugin.templater.functions.user = {};
+        }
+        templaterPlugin.templater.functions.user["new_module"] = async (app: any, tp: any, year: any) => {
+          return this.newModuleFunction(app, tp, year);
+        };
         templaterPlugin.templater.functions.user["new_chapter"] = async (tp: any) => {
           return this.newChapterFunction(tp);
         };
