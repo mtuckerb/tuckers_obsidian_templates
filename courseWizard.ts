@@ -217,17 +217,19 @@ export class CourseCreationWizard {
     courseYear: string
     courseId: string
   }): string {
-    // Use the templateManager to get the template content
+    const enhancedMetadata = this.settings.useEnhancedMetadata
+
+    // Use the templateManager to get the template content and replace values
     const templateManager = new TemplateManager(this.app, this.settings);
     const templateContent = templateManager.generateCourseHomepageTemplate();
     
     // Replace template variables with actual values
     return templateContent
-      .replace('<% courseName %>', courseDetails.courseName)
-      .replace('<% courseSeason %>', courseDetails.courseSeason)
-      .replace('<% courseYear %>', courseDetails.courseYear)
-      .replace('<% courseId %>', courseDetails.courseId)
-      .replace('<% tp.date.now("YYYY-MM-DD[T]HH:mm:ssZ") %>', new Date().toISOString())
+      .replace(/<% courseName %>/g, courseDetails.courseName)
+      .replace(/<% courseSeason %>/g, courseDetails.courseSeason)
+      .replace(/<% courseYear %>/g, courseDetails.courseYear)
+      .replace(/<% courseId %>/g, courseDetails.courseId)
+      .replace(/<% tp\.date\.now\("YYYY-MM-DD\[T\]HH:mm:ssZ"\) %>/g, new Date().toISOString())
       .replace(/<% tp\.date\.now\("YYYY-MM-DD\[T\]hh:mm:SSSSZZ"\) %>/g, new Date().toISOString());
   }
 }
