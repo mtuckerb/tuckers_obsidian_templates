@@ -443,13 +443,13 @@ return engine.markdown.create(str)
 
 ## Vocabulary
 \`\`\`dataviewjs
-const {processCourseVocabulary} = app.plugins.getPlugin("tuckers-tools")?.dataviewFunctions || require("${this.settings.dataviewJsPath || "/Supporting/dataview-functions"}");
+const {processCourseVocabulary} = app.plugins.getPlugin("tuckers-tools")?.dataviewFunctions || app.globals.tuckersTools.processCourseVocabulary;
 processCourseVocabulary(dv, '<% courseId %>');
 \`\`\`
 
 ## Due Dates
 \`\`\`dataviewjs
-const {processDueDates} = app.plugins.getPlugin("tuckers-tools")?.dataviewFunctions || require("${this.settings.dataviewJsPath || "/Supporting/dataview-functions"}");
+const {processDueDates} = app.plugins.getPlugin("tuckers-tools")?.dataviewFunctions || app.globals.tuckersTools.processDueDates;
 processDueDates(dv,'#<% courseId %>');
 \`\`\`
 
@@ -549,13 +549,13 @@ return engine.markdown.create(str)
 
 ## Vocabulary
 \`\`\`dataviewjs
-const {processCourseVocabulary} = app.plugins.getPlugin("tuckers-tools")?.dataviewFunctions || require("${this.settings.dataviewJsPath || "/Supporting/dataview-functions"}");
+const {processCourseVocabulary} = app.plugins.getPlugin("tuckers-tools")?.dataviewFunctions || app.globals.tuckersTools.processCourseVocabulary;
 processCourseVocabulary(dv, '<% courseId %>');
 \`\`\`
 
 ## Due Dates
 \`\`\`dataviewjs
-const {processDueDates} = app.plugins.getPlugin("tuckers-tools")?.dataviewFunctions || require("${this.settings.dataviewJsPath || "/Supporting/dataview-functions"}");
+const {processDueDates} = app.plugins.getPlugin("tuckers-tools")?.dataviewFunctions || app.globals.tuckersTools.processDueDates;
 processDueDates(dv,'#<% courseId %>');
 \`\`\``;
       
@@ -641,7 +641,7 @@ tags:
 |      |            |
 
 \`\`\`dataviewjs
-const {processDueDates} = require("${this.settings.dataviewJsPath || "/Supporting/dataview-functions"}");
+const {processDueDates} = app.plugins.getPlugin("tuckers-tools")?.dataviewFunctions || app.globals.tuckersTools.processDueDates;
 processDueDates(dv,'#<% courseId %>');
 \`\`\`
 
@@ -656,7 +656,7 @@ processDueDates(dv,'#<% courseId %>');
 ## Vocabulary
 
 \`\`\`dataviewjs
-const {processCourseVocabulary} = require("${this.settings.dataviewJsPath || "/Supporting/dataview-functions"}");
+const {processCourseVocabulary} = app.plugins.getPlugin("tuckers-tools")?.dataviewFunctions || app.globals.tuckersTools.processCourseVocabulary;
 processCourseVocabulary(dv, '<% courseId %>');
 \`\`\`
 

@@ -240,6 +240,15 @@ ${assignment.description}
           return this.newChapterFunction(tp);
         };
         
+        // Register dataview functions in the global namespace
+        (this.app as any).globals.tuckersTools.processCourseVocabulary = async (dv: any, courseId: string) => {
+          return processCourseVocabulary(dv, courseId);
+        };
+        
+        (this.app as any).globals.tuckersTools.processDueDates = async (dv: any, source: string, startDate: string | null = null, endDate: string | null = null) => {
+          return processDueDates(dv, source, startDate, endDate);
+        };
+        
         console.log("Tuckers Tools global functions registered successfully");
       } catch (e) {
         console.error("Error registering Tuckers Tools global functions:", e);
