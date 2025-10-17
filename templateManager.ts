@@ -588,9 +588,21 @@ tags:
     return `<%*
 const { season, moduleNumber, weekNumber, course, courseId, discipline, dayOfWeek } = await tp.app.globals.tuckersTools.new_module(app, tp, "2025");
 let title = courseId
-if (moduleNumber && weekNumber) { title = \`M\${moduleNumber}/W\${weekNumber}\`}
-else if (moduleNumber) { title = \`M\${moduleNumber}\` } 
-else if (weekNumber) { title = \`W\${weekNumber}\`}
+if (moduleNumber && weekNumber) { title = "M" + moduleNumber + "/W" + weekNumber }
+else if (moduleNumber) { title = "M" + moduleNumber } 
+else if (weekNumber) { title = "W" + weekNumber }
+
+// Move file to appropriate course location
+// Extract course information from the selected course file
+if (typeof course === 'object' && course !== null && course.path) {
+  // Get the directory of the course file (should be Year/Season/CourseName/)
+  const courseDir = course.path.substring(0, course.path.lastIndexOf('/'));
+  const moduleName = course.basename + " - " + title + " - " + dayOfWeek;
+  await tp.file.move(courseDir + "/" + moduleName);
+} else {
+  // Fallback - put in Modules directory
+  await tp.file.move("Modules/" + (course || "New Course") + " - " + title + " - " + dayOfWeek);
+}
 %>---
 ${
   this.settings.useEnhancedMetadata

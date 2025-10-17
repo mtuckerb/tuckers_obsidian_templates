@@ -365,8 +365,20 @@ ${assignment.description}
     }
 
     // Calculate derived values
-    courseId = Array.isArray(course) ? course.split(" - ")[0] || course : "";
-    discipline = Array.isArray(course) ? (course.split(" - ")[0]?.substring(0, 3) || "GEN") : "GEN";
+    // Handle both file object (from suggester) and string (from prompt fallback)
+    if (typeof course === 'object' && course !== null && (course as any).basename) {
+      // course is a file object from suggester
+      courseId = (course as any).basename.split(" - ")[0] || (course as any).basename;
+      discipline = ((course as any).basename.split(" - ")[0]?.substring(0, 3) || "GEN");
+    } else if (typeof course === 'string') {
+      // course is a string from prompt fallback
+      courseId = course.split(" - ")[0] || course;
+      discipline = (course.split(" - ")[0]?.substring(0, 3) || "GEN");
+    } else {
+      // Fallback
+      courseId = "";
+      discipline = "GEN";
+    }
 
     return {
       season,
