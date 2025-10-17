@@ -99,7 +99,6 @@ export class TemplateManager {
       await this.installChapterTemplates(fullTemplatePath)
       await this.installAssignmentTemplates(fullTemplatePath)
       await this.installDailyTemplates(fullTemplatePath)
-      await this.installUtilityTemplates(fullTemplatePath)
 
       // Create README
       await this.createREADME(fullTemplatePath)
@@ -231,7 +230,6 @@ export class TemplateManager {
       await this.installChapterTemplates(fullTemplatePath)
       await this.installAssignmentTemplates(fullTemplatePath)
       await this.installDailyTemplates(fullTemplatePath)
-      await this.installUtilityTemplates(fullTemplatePath)
 
       // Update README
       await this.createREADME(fullTemplatePath)
@@ -309,22 +307,57 @@ export class TemplateManager {
     )
   }
 
-  async installUtilityTemplates(basePath: string) {
-    const utilityPath = `${basePath}/Utilities`
-
-    // Create Vocabulary Entry template
-    const vocabTemplate = this.generateVocabularyTemplate()
-    await this.writeTemplateFile(
-      `${utilityPath}/Vocabulary Entry.md`,
-      vocabTemplate
-    )
-
-    // Create Due Date Entry template
-    const dueDateTemplate = this.generateDueDateTemplate()
-    await this.writeTemplateFile(
-      `${utilityPath}/Due Date Entry.md`,
-      dueDateTemplate
-    )
+  /**
+   * Generates the proper nested path for a module file based on course details
+   * @param course - The course file object or course name string
+   * @param courseId - The course ID
+   * @param moduleNumber - The module number (optional)
+   * @param weekNumber - The week number (optional)
+   * @param dayOfWeek - The day of the week
+   * @returns The proper nested path for the module file
+   */
+  generateModulePath(
+    course: any,
+    courseId: string,
+    moduleNumber: string | null,
+    weekNumber: string | null,
+    dayOfWeek: string
+  ): string {
+    let modulePath = "";
+    
+    if (typeof course === 'object' && course !== null && course.path) {
+      // Get the directory of the course file (should be Year/Season/CourseName/)
+      const courseDir = course.path.substring(0, course.path.lastIndexOf('/'));
+      const courseName = course.basename;
+      
+      // Create proper nested directory structure based on module/week numbers
+      if (moduleNumber && weekNumber) {
+        // Module and Week combination: /Year/Season/CourseName/CourseId - Module X/CourseId - Week Y/CourseId.X.Y.md
+        modulePath = `${courseDir}/${courseId} - Module ${moduleNumber}/${courseId} - Week ${weekNumber}/${courseId}.${moduleNumber}.${weekNumber} - ${dayOfWeek}`;
+      } else if (moduleNumber) {
+        // Module only: /Year/Season/CourseName/CourseId - Module X/CourseId.X.md
+        modulePath = `${courseDir}/${courseId} - Module ${moduleNumber}/${courseId}.${moduleNumber} - ${dayOfWeek}`;
+      } else if (weekNumber) {
+        // Week only: /Year/Season/CourseName/CourseId - Week X/CourseId.X DOW.md
+        modulePath = `${courseDir}/${courseId} - Week ${weekNumber}/${courseId}.${weekNumber} ${dayOfWeek}`;
+      } else {
+        // Neither module nor week: /Year/Season/CourseName/CourseId - DOW.md
+        modulePath = `${courseDir}/${courseId} - ${dayOfWeek}`;
+      }
+    } else {
+      // Fallback - put in Modules directory with nested structure
+      if (moduleNumber && weekNumber) {
+        modulePath = `Modules/${courseId} - Module ${moduleNumber}/${courseId} - Week ${weekNumber}/${courseId}.${moduleNumber}.${weekNumber} - ${dayOfWeek}`;
+      } else if (moduleNumber) {
+        modulePath = `Modules/${courseId} - Module ${moduleNumber}/${courseId}.${moduleNumber} - ${dayOfWeek}`;
+      } else if (weekNumber) {
+        modulePath = `Modules/${courseId} - Week ${weekNumber}/${courseId}.${weekNumber} ${dayOfWeek}`;
+      } else {
+        modulePath = `Modules/${courseId} - ${dayOfWeek}`;
+      }
+    }
+    
+    return modulePath;
   }
 
   async writeTemplateFile(path: string, content: string) {
@@ -555,17 +588,38 @@ else if (moduleNumber) { title = "M" + moduleNumber }
 else if (weekNumber) { title = "W" + weekNumber }
 
 // Move file to appropriate course location after creation
-// Extract course information from the selected course file
+// Extract course information from the selected course file and create proper nested directory structure
 let modulePath = "";
 if (typeof course === 'object' && course !== null && course.path) {
   // Get the directory of the course file (should be Year/Season/CourseName/)
   const courseDir = course.path.substring(0, course.path.lastIndexOf('/'));
-  const moduleName = course.basename + " - " + title + " - " + dayOfWeek;
-  modulePath = courseDir + "/" + moduleName;
+  const courseName = course.basename;
+  
+  // Create proper nested directory structure based on module/week numbers
+  if (moduleNumber && weekNumber) {
+    // Module and Week combination
+    modulePath = courseDir + "/" + courseId + " - Module " + moduleNumber + "/" + courseId + " - Week " + weekNumber + "/" + courseId + "." + moduleNumber + "." + weekNumber + " - " + dayOfWeek;
+  } else if (moduleNumber) {
+    // Module only
+    modulePath = courseDir + "/" + courseId + " - Module " + moduleNumber + "/" + courseId + "." + moduleNumber + " - " + dayOfWeek;
+  } else if (weekNumber) {
+    // Week only
+    modulePath = courseDir + "/" + courseId + " - Week " + weekNumber + "/" + courseId + "." + weekNumber + " " + dayOfWeek;
+  } else {
+    // Neither module nor week
+    modulePath = courseDir + "/" + courseId + " - " + dayOfWeek;
+  }
 } else {
-  // Fallback - put in Modules directory
-  const moduleName = (course || "New Course") + " - " + title + " - " + dayOfWeek;
-  modulePath = "Modules/" + moduleName;
+  // Fallback - put in Modules directory with nested structure
+  if (moduleNumber && weekNumber) {
+    modulePath = "Modules/" + courseId + " - Module " + moduleNumber + "/" + courseId + " - Week " + weekNumber + "/" + courseId + "." + moduleNumber + "." + weekNumber + " - " + dayOfWeek;
+  } else if (moduleNumber) {
+    modulePath = "Modules/" + courseId + " - Module " + moduleNumber + "/" + courseId + "." + moduleNumber + " - " + dayOfWeek;
+  } else if (weekNumber) {
+    modulePath = "Modules/" + courseId + " - Week " + weekNumber + "/" + courseId + "." + weekNumber + " " + dayOfWeek;
+  } else {
+    modulePath = "Modules/" + courseId + " - " + dayOfWeek;
+  }
 }
 
 // We'll move the file after creation using the modulePath variable
