@@ -349,11 +349,11 @@ export class TemplateManager {
     }
   }
 
-  generateCourseHomepageTemplate(): string {
+    generateCourseHomepageTemplate(): string {
     const enhancedMetadata = this.settings.useEnhancedMetadata;
     
     if (enhancedMetadata) {
-      let template = `<%*
+      return `<%*
 // Tuckers Tools Course Creation
 // For best experience, use the plugin command: Command Palette → 'Create New Course'
 
@@ -402,7 +402,6 @@ banner:
 cssclasses:
   - whiteboard-course
 ---
-
 
 # <% courseName %>
 
@@ -454,54 +453,15 @@ processDueDates(dv,'#<% courseId %>');
 \`\`\`
 
 ## Class Materials
-\`INPUT[textArea:class_materials]\`
-
-## Classmates
-
-<%*\n// Move the file to the correct location after all content is generated\nif (modulePath) {\n  try {\n    await tp.file.move(modulePath);\n  } catch (e) {\n    console.error("Error moving module file:", e);\n  }\n}\n%>
-\`INPUT[textArea:classmates]\``;
-      
-         return template;
+\`INPUT[textArea:class_materials]\``;
     } else {
-      let template = `<%*
-// Tuckers Tools Course Creation
-// For best experience, use the plugin command: Command Palette → 'Create New Course'
-
-let courseName = "New Course";
-let courseSeason = "Fall"; 
-let courseYear = new Date().getFullYear().toString();
-let courseId = "COURSE_ID";
-
-// Try to use system prompts, with graceful fallback
-try {
-  if (tp && tp.system && tp.system.prompt) {
-    courseName = await tp.system.prompt("Course Name (e.g. SWO-250 - Course Title)") || courseName;
-    courseId = courseName.split(' - ')[0] || courseName.replace(/[^a-zA-Z0-9]/g, "_");
-    courseSeason = await tp.system.suggester(["Fall","Winter","Spring","Summer"],["Fall","Winter","Spring","Summer"], "Season") || courseSeason;
-    courseYear = await tp.system.prompt("Year") || courseYear;
-  } else {
-    console.log("System prompts not available, use the plugin command instead");
-  }
-} catch (e) {
-  console.error("Error with system prompts:", e.message);
-  console.log("Use the plugin command: Command Palette → 'Create New Course'");
-}
-
-// Move file to appropriate location
-await tp.file.move(\`/\${courseYear}/\${courseSeason}/\${courseName}/\${courseName}\`);
-
-// Create attachments folder
-try {
-  await app.vault.createFolder(\`/\${courseYear}/\${courseSeason}/\${courseName}/Attachments\`);
-} catch (e) {
-  // Folder might already exist
-}
-%>---
+      return `---
 course_id: <% courseId %>
 course_name: <% courseName %>
 course_season: <% courseSeason %>
 course_year: <% courseYear %>
 created: <% tp.date.now("YYYY-MM-DD[T]HH:mm:ssZ") %>
+contentType: Course
 tags:
   - <% courseId %>
   - course_home
@@ -534,11 +494,11 @@ tags:
 const availableTexts = app.vault.getFiles().filter(file => file.extension == 'pdf').map(f => f?.name)
 const escapeRegex = /[,\`'()]/g;
 options = availableTexts.map(t => \`option([[\${t.replace(escapeRegex,"\$1")}]], \${t.replace(escapeRegex,"\$1")})\` )
-const str = \'\\\`INPUT[inlineListSuggester(\${options.join(", ")}):texts]\\\`\\'
+const str = \`\\\`INPUT[inlineListSuggester(\${options.join(", ")}):texts]\\\`\`
 return engine.markdown.create(str)
 \`\`\`
 
-## Schedule
+## Course Schedule
 \`INPUT[textArea:course_schedule]\`
 
 ## Assignments
@@ -557,10 +517,10 @@ processCourseVocabulary(dv, '<% courseId %>');
 \`\`\`dataviewjs
 const {processDueDates} = app.plugins.getPlugin("tuckers-tools")?.dataviewFunctions || app.globals.tuckersTools.processDueDates;
 processDueDates(dv,'#<% courseId %>');
-\`\`\``;
-      
-      
-      return template;
+\`\`\`
+
+## Class Materials
+\`INPUT[textArea:class_materials]\``;
     }
   }
 
@@ -631,7 +591,7 @@ tags:
 ---
 
 
-# [[<% course %>]] - <% title %> - <% dayOfWeek %>
+# [[<% course %>|<% courseId %> <% title %> <% dayOfWeek %>]]
 
 ## Due Dates
 | Date | Assignment |
