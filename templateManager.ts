@@ -378,7 +378,7 @@ try {
 }
 
 // Move file to appropriate location
-await tp.file.move(\`/\${courseYear}/\${courseSeason}/\${courseName}/\${courseName}\`);
+await tp.file.move(\`/\${courseYear}/\${courseSeason}/\${courseName}/\${courseName}.md\`);
 
 // Create attachments folder
 try {
@@ -620,7 +620,19 @@ const {processCourseVocabulary} = app.plugins.getPlugin("tuckers-tools")?.datavi
 processCourseVocabulary(dv, '<% courseId %>');
 \`\`\`
 
-## Additional Resources`
+## Additional Resources
+
+<%*
+// Move file to appropriate location after content generation
+if (modulePath) {
+  try {
+    await tp.file.move(modulePath + ".md");
+  } catch (e) {
+    console.error("Error moving module file:", e);
+  }
+}
+%>
+`;
   }
 
   generateChapterTemplate(): string {
