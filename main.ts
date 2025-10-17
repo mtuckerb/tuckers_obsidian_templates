@@ -249,6 +249,38 @@ ${assignment.description}
           return processDueDates(dv, source, startDate, endDate);
         };
         
+        // Also register functions in tp.user namespace for template access
+        // This ensures compatibility with templates that expect tp.user.function_name
+        const templaterPlugin: any = (this.app as any).plugins.getPlugin("templater-obsidian");
+        if (templaterPlugin && templaterPlugin.templater && templaterPlugin.templater.functions) {
+          // Create tp.user namespace if it doesn't exist
+          if (!templaterPlugin.templater.functions.user) {
+            templaterPlugin.templater.functions.user = {};
+          }
+          
+          // Register our functions in the tp.user namespace
+          templaterPlugin.templater.functions.user["new_module"] = async (app: any, tp: any, year: any) => {
+            return this.newModuleFunction(app, tp, year);
+          };
+          
+          templaterPlugin.templater.functions.user["new_chapter"] = async (tp: any) => {
+            return this.newChapterFunction(tp);
+          };
+          
+          // Register dataview functions in the tp.user namespace
+          templaterPlugin.templater.functions.user["processCourseVocabulary"] = async (dv: any, courseId: string) => {
+            return processCourseVocabulary(dv, courseId);
+          };
+          
+          templaterPlugin.templater.functions.user["processDueDates"] = async (dv: any, source: string, startDate: string | null = null, endDate: string | null = null) => {
+            return processDueDates(dv, source, startDate, endDate);
+          };
+          
+          console.log("Tuckers Tools templater functions registered successfully in both global and tp.user namespaces");
+        } else {
+          console.log("Templater plugin not found or not fully loaded, functions registered in global namespace only");
+        }
+        
         console.log("Tuckers Tools global functions registered successfully");
       } catch (e) {
         console.error("Error registering Tuckers Tools global functions:", e);
