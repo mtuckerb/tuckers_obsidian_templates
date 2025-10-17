@@ -457,6 +457,8 @@ processDueDates(dv,'#<% courseId %>');
 \`INPUT[textArea:class_materials]\`
 
 ## Classmates
+
+<%*\n// Move the file to the correct location after all content is generated\nif (modulePath) {\n  try {\n    await tp.file.move(modulePath);\n  } catch (e) {\n    console.error("Error moving module file:", e);\n  }\n}\n%>
 \`INPUT[textArea:classmates]\``;
       
          return template;
@@ -592,17 +594,21 @@ if (moduleNumber && weekNumber) { title = "M" + moduleNumber + "/W" + weekNumber
 else if (moduleNumber) { title = "M" + moduleNumber } 
 else if (weekNumber) { title = "W" + weekNumber }
 
-// Move file to appropriate course location
+// Move file to appropriate course location after creation
 // Extract course information from the selected course file
+let modulePath = "";
 if (typeof course === 'object' && course !== null && course.path) {
   // Get the directory of the course file (should be Year/Season/CourseName/)
   const courseDir = course.path.substring(0, course.path.lastIndexOf('/'));
   const moduleName = course.basename + " - " + title + " - " + dayOfWeek;
-  await tp.file.move(courseDir + "/" + moduleName);
+  modulePath = courseDir + "/" + moduleName;
 } else {
   // Fallback - put in Modules directory
-  await tp.file.move("Modules/" + (course || "New Course") + " - " + title + " - " + dayOfWeek);
+  const moduleName = (course || "New Course") + " - " + title + " - " + dayOfWeek;
+  modulePath = "Modules/" + moduleName;
 }
+
+// We'll move the file after creation using the modulePath variable
 %>---
 ${
   this.settings.useEnhancedMetadata
